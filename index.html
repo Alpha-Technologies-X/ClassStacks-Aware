@@ -171,6 +171,22 @@
             display: none;
         }
         
+        .auth-toggle {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .auth-toggle a {
+            color: var(--aware-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .auth-toggle a:hover {
+            text-decoration: underline;
+        }
+        
         /* Dashboard Layout */
         .dashboard {
             display: none;
@@ -918,27 +934,73 @@
         <div class="auth-box">
             <div class="auth-logo">
                 <h1>🔍 ClassStacks Aware</h1>
-                <p>Enhanced Monitoring Dashboard</p>
+                <p>School Monitoring Dashboard</p>
             </div>
             
             <div class="auth-tabs">
-                <div class="auth-tab active" id="awareTab" onclick="showAuthTab('aware')">Aware Login</div>
+                <div class="auth-tab active" id="schoolTab" onclick="showAuthTab('school')">School Admin</div>
                 <div class="auth-tab" id="teacherTab" onclick="showAuthTab('teacher')">Teacher Login</div>
             </div>
             
-            <!-- Aware Login Form -->
-            <div id="awareAuth">
+            <!-- School Admin Login Form -->
+            <div id="schoolAuth">
                 <div class="form-group">
-                    <label for="awareEmail">Email Address</label>
-                    <input type="email" id="awareEmail" placeholder="Enter your email" required>
+                    <label for="schoolEmail">Email Address</label>
+                    <input type="email" id="schoolEmail" placeholder="Enter your email" required>
                 </div>
                 
                 <div class="form-group">
-                    <label for="awarePassword">Password</label>
-                    <input type="password" id="awarePassword" placeholder="Enter your password" required>
+                    <label for="schoolPassword">Password</label>
+                    <input type="password" id="schoolPassword" placeholder="Enter your password" required>
                 </div>
                 
-                <button class="btn btn-primary" onclick="loginAware()" style="width: 100%;">Login to Aware Dashboard</button>
+                <button class="btn btn-primary" onclick="loginSchool()" style="width: 100%;">Login as School Admin</button>
+                
+                <div class="auth-toggle">
+                    <a href="#" onclick="showSchoolRegistration()">Don't have an account? Register</a>
+                </div>
+            </div>
+            
+            <!-- School Registration Form -->
+            <div id="schoolRegistration" style="display: none;">
+                <h2 style="text-align: center; margin-bottom: 20px;">Create School Account</h2>
+                
+                <div class="form-group">
+                    <label for="schoolName">School Name</label>
+                    <input type="text" id="schoolName" placeholder="Enter your school name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="schoolType">School Type</label>
+                    <select id="schoolType" required>
+                        <option value="">Select school type</option>
+                        <option value="elementary">Elementary School</option>
+                        <option value="middle">Middle School</option>
+                        <option value="high">High School</option>
+                        <option value="college">College/University</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminName">Administrator Name</label>
+                    <input type="text" id="adminName" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminEmail">Email Address</label>
+                    <input type="email" id="adminEmail" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" placeholder="Create a password" required>
+                </div>
+                
+                <button class="btn btn-success" onclick="registerSchool()" style="width: 100%;">Create School Account</button>
+                
+                <div class="auth-toggle">
+                    <a href="#" onclick="showSchoolLogin()">Already have an account? Login</a>
+                </div>
             </div>
             
             <!-- Teacher Login Form -->
@@ -954,6 +1016,41 @@
                 </div>
                 
                 <button class="btn btn-primary" onclick="loginTeacher()" style="width: 100%;">Login as Teacher</button>
+                
+                <div class="auth-toggle">
+                    <a href="#" onclick="showTeacherRegistration()">Don't have an account? Register</a>
+                </div>
+            </div>
+            
+            <!-- Teacher Registration Form -->
+            <div id="teacherRegistration" style="display: none;">
+                <h2 style="text-align: center; margin-bottom: 20px;">Teacher Registration</h2>
+                
+                <div class="form-group">
+                    <label for="teacherName">Full Name</label>
+                    <input type="text" id="teacherName" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="teacherRegEmail">Email Address</label>
+                    <input type="email" id="teacherRegEmail" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="teacherRegPassword">Password</label>
+                    <input type="password" id="teacherRegPassword" placeholder="Create a password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="schoolNameTeacher">School Name</label>
+                    <input type="text" id="schoolNameTeacher" placeholder="Enter your school name" required>
+                </div>
+                
+                <button class="btn btn-success" onclick="registerTeacher()" style="width: 100%;">Create Teacher Account</button>
+                
+                <div class="auth-toggle">
+                    <a href="#" onclick="showTeacherLogin()">Already have an account? Login</a>
+                </div>
             </div>
             
             <div class="error-message" id="errorMessage"></div>
@@ -969,10 +1066,10 @@
             </div>
             <div class="header-right">
                 <div class="user-info">
-                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div class="user-avatar" id="userAvatar">S</div>
                     <div>
-                        <div style="font-weight: 600;" id="userName">Aware Admin</div>
-                        <div style="font-size: 0.8rem; opacity: 0.8;" id="userRole">Aware Dashboard</div>
+                        <div style="font-weight: 600;" id="userName">School Admin</div>
+                        <div style="font-size: 0.8rem; opacity: 0.8;" id="userRole">School Monitoring Dashboard</div>
                     </div>
                 </div>
                 <button class="btn btn-danger" onclick="logout()">Logout</button>
@@ -1007,9 +1104,9 @@
                 <!-- Overview View -->
                 <div class="aware-view" id="overviewView">
                     <div class="content-header">
-                        <div class="content-title">Aware Dashboard Overview</div>
+                        <div class="content-title">School Monitoring Dashboard</div>
                         <button class="btn btn-primary" onclick="startClassSession()">
-                            <span>▶️</span> Start Class Session
+                            <span>▶️</span> Start Monitoring Session
                         </button>
                     </div>
                     
@@ -1306,20 +1403,20 @@
                 try {
                     currentUser = JSON.parse(savedUser);
                     
-                    // Check if user has access to Aware
-                    if (currentUser.role === 'aware' || currentUser.role === 'school' || currentUser.role === 'teacher') {
+                    // Check if user has access to Aware (school admin or teacher)
+                    if (currentUser.role === 'school' || currentUser.role === 'teacher') {
                         showAwareDashboard();
                     } else {
                         // Show login page
-                        showAuthTab('aware');
+                        showAuthTab('school');
                     }
                 } catch (e) {
                     console.error('Error parsing user data:', e);
-                    showAuthTab('aware');
+                    showAuthTab('school');
                 }
             } else {
                 // No user logged in, show login page
-                showAuthTab('aware');
+                showAuthTab('school');
             }
             
             // Initialize data structure if it doesn't exist
@@ -1351,25 +1448,121 @@
         
         // Show authentication tab
         function showAuthTab(tab) {
-            document.getElementById('awareTab').classList.remove('active');
+            document.getElementById('schoolTab').classList.remove('active');
             document.getElementById('teacherTab').classList.remove('active');
             
-            document.getElementById('awareAuth').style.display = 'none';
+            document.getElementById('schoolAuth').style.display = 'none';
+            document.getElementById('schoolRegistration').style.display = 'none';
             document.getElementById('teacherAuth').style.display = 'none';
+            document.getElementById('teacherRegistration').style.display = 'none';
             
-            if (tab === 'aware') {
-                document.getElementById('awareTab').classList.add('active');
-                document.getElementById('awareAuth').style.display = 'block';
+            if (tab === 'school') {
+                document.getElementById('schoolTab').classList.add('active');
+                document.getElementById('schoolAuth').style.display = 'block';
             } else if (tab === 'teacher') {
                 document.getElementById('teacherTab').classList.add('active');
                 document.getElementById('teacherAuth').style.display = 'block';
             }
         }
         
-        // Login to Aware dashboard
-        function loginAware() {
-            const email = document.getElementById('awareEmail').value;
-            const password = document.getElementById('awarePassword').value;
+        // Show school registration
+        function showSchoolRegistration() {
+            document.getElementById('schoolAuth').style.display = 'none';
+            document.getElementById('schoolRegistration').style.display = 'block';
+        }
+        
+        // Show school login
+        function showSchoolLogin() {
+            document.getElementById('schoolRegistration').style.display = 'none';
+            document.getElementById('schoolAuth').style.display = 'block';
+        }
+        
+        // Show teacher registration
+        function showTeacherRegistration() {
+            document.getElementById('teacherAuth').style.display = 'none';
+            document.getElementById('teacherRegistration').style.display = 'block';
+        }
+        
+        // Show teacher login
+        function showTeacherLogin() {
+            document.getElementById('teacherRegistration').style.display = 'none';
+            document.getElementById('teacherAuth').style.display = 'block';
+        }
+        
+        // Register a new school
+        function registerSchool() {
+            const schoolName = document.getElementById('schoolName').value;
+            const schoolType = document.getElementById('schoolType').value;
+            const adminName = document.getElementById('adminName').value;
+            const adminEmail = document.getElementById('adminEmail').value;
+            const adminPassword = document.getElementById('adminPassword').value;
+            
+            if (!schoolName || !schoolType || !adminName || !adminEmail || !adminPassword) {
+                showError('Please fill in all required fields');
+                return;
+            }
+            
+            if (adminPassword.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+            
+            const data = getSharedData();
+            
+            // Check if email already exists
+            const existingUser = Object.values(data.schools).find(school => 
+                school.email === adminEmail
+            );
+            
+            if (existingUser) {
+                showError('A school with this email already exists');
+                return;
+            }
+            
+            // Create school account
+            const schoolId = 'school_' + Date.now();
+            const schoolCode = generateSchoolCode();
+            
+            data.schools[schoolId] = {
+                id: schoolId,
+                name: schoolName,
+                type: schoolType,
+                adminName: adminName,
+                email: adminEmail,
+                password: adminPassword,
+                role: 'school',
+                schoolCode: schoolCode,
+                created: Date.now()
+            };
+            
+            // Initialize school settings
+            data.schoolSettings[schoolId] = {
+                blockedSites: ['youtube.com', 'facebook.com', 'instagram.com', 'tiktok.com'],
+                allowBrowsing: true,
+                requireStudentNames: true,
+                enableScreenshots: true
+            };
+            
+            // Save data
+            saveSharedData(data);
+            
+            // Set current user
+            currentUser = data.schools[schoolId];
+            
+            // Save to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Show success message and dashboard
+            showSuccess('School account created successfully! School Code: ' + schoolCode);
+            setTimeout(() => {
+                showAwareDashboard();
+            }, 1500);
+        }
+        
+        // Login as school admin
+        function loginSchool() {
+            const email = document.getElementById('schoolEmail').value;
+            const password = document.getElementById('schoolPassword').value;
             
             if (!email || !password) {
                 showError('Please enter both email and password');
@@ -1378,23 +1571,7 @@
             
             const data = getSharedData();
             
-            // Check if it's the default aware admin
-            if (email === 'admin@classstacks.com' && password === 'aware123') {
-                // Create aware admin user
-                currentUser = {
-                    id: 'aware_admin',
-                    name: 'Aware Admin',
-                    email: 'admin@classstacks.com',
-                    role: 'aware',
-                    created: Date.now()
-                };
-                
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                showAwareDashboard();
-                return;
-            }
-            
-            // Check if it's a school admin
+            // Find school with matching credentials
             const school = Object.values(data.schools).find(s => 
                 s.email === email && s.password === password
             );
@@ -1403,22 +1580,66 @@
                 currentUser = school;
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 showAwareDashboard();
+            } else {
+                showError('Invalid email or password');
+            }
+        }
+        
+        // Register a new teacher
+        function registerTeacher() {
+            const teacherName = document.getElementById('teacherName').value;
+            const teacherEmail = document.getElementById('teacherRegEmail').value;
+            const teacherPassword = document.getElementById('teacherRegPassword').value;
+            const schoolName = document.getElementById('schoolNameTeacher').value;
+            
+            if (!teacherName || !teacherEmail || !teacherPassword || !schoolName) {
+                showError('Please fill in all required fields');
                 return;
             }
             
-            // Check if it's a teacher with Aware access
-            const teacher = Object.values(data.teachers).find(t => 
-                t.email === email && t.password === password
+            if (teacherPassword.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+            
+            const data = getSharedData();
+            
+            // Check if email already exists
+            const existingUser = Object.values(data.teachers).find(teacher => 
+                teacher.email === teacherEmail
             );
             
-            if (teacher) {
-                currentUser = teacher;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                showAwareDashboard();
+            if (existingUser) {
+                showError('A teacher with this email already exists');
                 return;
             }
             
-            showError('Invalid email or password');
+            // Create teacher account
+            const teacherId = 'teacher_' + Date.now();
+            data.teachers[teacherId] = {
+                id: teacherId,
+                name: teacherName,
+                email: teacherEmail,
+                password: teacherPassword,
+                school: schoolName,
+                role: 'teacher',
+                created: Date.now()
+            };
+            
+            // Save data
+            saveSharedData(data);
+            
+            // Set current user
+            currentUser = data.teachers[teacherId];
+            
+            // Save to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Show success message and redirect to teacher dashboard
+            showSuccess('Teacher account created successfully!');
+            setTimeout(() => {
+                window.location.href = 'classstacks-teacher.html';
+            }, 1500);
         }
         
         // Login as teacher (redirects to teacher dashboard)
@@ -1456,8 +1677,7 @@
             // Update user info
             document.getElementById('userName').textContent = currentUser.name;
             document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
-            document.getElementById('userRole').textContent = currentUser.role === 'aware' ? 'Aware Admin' : 
-                                                              currentUser.role === 'school' ? 'School Admin' : 'Teacher';
+            document.getElementById('userRole').textContent = currentUser.role === 'school' ? 'School Admin' : 'Teacher';
             
             // Start monitoring
             startMonitoring();
@@ -2070,7 +2290,7 @@
             const data = getSharedData();
             
             // Generate class code
-            const classCode = 'CLASS_' + Date.now().toString(36).toUpperCase();
+            const classCode = generateClassCode();
             
             // Parse blocked sites
             const blockedSites = blocks.split('\n')
@@ -2151,7 +2371,7 @@
                     firstName: firstName,
                     lastName: lastName,
                     name: studentName,
-                    schoolCode: 'SCHOOL',
+                    schoolCode: currentUser.schoolCode || 'SCHOOL',
                     classCode: classId,
                     lastActive: Date.now(),
                     device: 'Desktop',
@@ -2252,8 +2472,8 @@
             document.getElementById('authContainer').style.display = 'flex';
             
             // Clear form fields
-            document.getElementById('awareEmail').value = '';
-            document.getElementById('awarePassword').value = '';
+            document.getElementById('schoolEmail').value = '';
+            document.getElementById('schoolPassword').value = '';
             document.getElementById('teacherEmail').value = '';
             document.getElementById('teacherPassword').value = '';
             
@@ -2301,6 +2521,24 @@
                 console.error('Error saving data:', e);
                 return false;
             }
+        }
+        
+        function generateSchoolCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+        
+        function generateClassCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
         }
         
         function showError(message) {
@@ -2373,7 +2611,7 @@
                         firstName: student.firstName,
                         lastName: student.lastName,
                         name: studentName,
-                        schoolCode: 'SCHOOL',
+                        schoolCode: currentUser.schoolCode || 'SCHOOL',
                         classCode: classCode,
                         lastActive: Date.now() - Math.floor(Math.random() * 60000), // Random time in last minute
                         device: 'Desktop',
