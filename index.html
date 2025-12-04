@@ -35,7 +35,7 @@
         body {
             background: #f5f7fb;
             color: var(--dark);
-            overflow: hidden;
+            overflow-x: hidden;
         }
         
         /* Authentication Styles */
@@ -46,6 +46,7 @@
             min-height: 100vh;
             background: linear-gradient(135deg, var(--aware-primary) 0%, var(--aware-secondary) 100%);
             padding: 20px;
+            overflow-y: auto;
         }
         
         .auth-box {
@@ -55,6 +56,7 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 500px;
+            margin: 20px 0;
         }
         
         .auth-logo {
@@ -576,6 +578,11 @@
             color: #666;
         }
         
+        .status-locked {
+            background: #ffeaea;
+            color: var(--danger);
+        }
+        
         /* Class Cards */
         .class-grid {
             display: grid;
@@ -995,6 +1002,89 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        
+        /* Teacher Management Styles */
+        .teachers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .teacher-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 20px;
+            border: 1px solid #e1e5ee;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .teacher-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--warning) 0%, #f4a261 100%);
+        }
+        
+        .teacher-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--aware-primary) 0%, var(--aware-secondary) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+        
+        /* School Settings Styles */
+        .settings-section {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e1e5ee;
+        }
+        
+        .settings-section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e1e5ee;
+            color: var(--aware-primary);
+        }
+        
+        /* School Code Display */
+        .school-code-display {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            text-align: center;
+            border: 2px solid #e1e5ee;
+            margin-bottom: 25px;
+        }
+        
+        .school-code {
+            font-family: monospace;
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--aware-primary);
+            letter-spacing: 5px;
+            margin: 15px 0;
+            padding: 20px;
+            background: white;
+            border-radius: var(--radius-md);
+            border: 3px dashed rgba(106, 17, 203, 0.3);
+        }
     </style>
 </head>
 <body>
@@ -1111,8 +1201,11 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="schoolNameTeacher">School Name</label>
-                    <input type="text" id="schoolNameTeacher" placeholder="Enter your school name" required>
+                    <label for="teacherSchoolCode">School Code</label>
+                    <input type="text" id="teacherSchoolCode" placeholder="Enter your school code" required>
+                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                        Ask your school administrator for the school code
+                    </div>
                 </div>
                 
                 <button class="btn btn-success" onclick="registerTeacher()" style="width: 100%;">Create Teacher Account</button>
@@ -1159,6 +1252,12 @@
                     </li>
                     <li class="sidebar-item" onclick="showAwareView('classes')">
                         <span>👨‍🏫</span> <span>Class Management</span>
+                    </li>
+                    <li class="sidebar-item" onclick="showAwareView('teachers')" id="teachersTab" style="display: none;">
+                        <span>👥</span> <span>Teacher Management</span>
+                    </li>
+                    <li class="sidebar-item" onclick="showAwareView('schoolSettings')" id="schoolSettingsTab" style="display: none;">
+                        <span>⚙️</span> <span>School Settings</span>
                     </li>
                     <li class="sidebar-item" onclick="showAwareView('activity')">
                         <span>📈</span> <span>Activity Timeline</span>
@@ -1298,12 +1397,6 @@
                     <div class="content-header">
                         <div class="content-title">Class Management</div>
                         <div>
-                            <button class="btn btn-warning" onclick="showCreateBypassCodeModal()" style="margin-right: 10px;">
-                                <span>🔑</span> Create Bypass Code
-                            </button>
-                            <button class="btn btn-success" onclick="showCreateScheduleModal()" style="margin-right: 10px;">
-                                <span>📅</span> Create Schedule
-                            </button>
                             <button class="btn btn-primary" onclick="showCreateClassModal()">
                                 <span>➕</span> Create Class
                             </button>
@@ -1363,47 +1456,116 @@
                     <div class="section-content" id="settingsSection">
                         <div class="content-card">
                             <div class="card-header">
-                                <div class="card-title">Monitoring Settings</div>
+                                <div class="card-title">Class Settings</div>
                             </div>
                             <div class="card-body">
-                                <div class="form-group">
-                                    <label for="globalBlocks">Globally Blocked Websites (one per line)</label>
-                                    <textarea id="globalBlocks" rows="6" placeholder="Enter websites to block for all students" class="form-control"></textarea>
+                                <div id="classSettingsContent">
+                                    <!-- Class-specific settings for teachers, school-wide settings for admins -->
                                 </div>
-                                
-                                <div class="form-group">
-                                    <label for="monitoringHours">Monitoring Hours</label>
-                                    <div class="time-input-group">
-                                        <input type="time" id="monitoringStart" class="form-control" value="08:00">
-                                        <span>to</span>
-                                        <input type="time" id="monitoringEnd" class="form-control" value="16:00">
-                                    </div>
-                                </div>
-                                
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="enableScreenshots" checked>
-                                    <label for="enableScreenshots">Enable screenshot capture</label>
-                                </div>
-                                
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="enableActivityLogging" checked>
-                                    <label for="enableActivityLogging">Enable activity logging</label>
-                                </div>
-                                
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="enableMessaging" checked>
-                                    <label for="enableMessaging">Enable student messaging</label>
-                                </div>
-                                
-                                <div class="checkbox-group">
-                                    <input type="checkbox" id="requireParentApproval">
-                                    <label for="requireParentApproval">Require parent approval for student access</label>
-                                </div>
-                                
-                                <button class="btn btn-primary" onclick="saveSchoolSettings()" style="width: 100%; margin-top: 20px;">
-                                    <span>💾</span> Save Settings
-                                </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Teacher Management View (School Admin Only) -->
+                <div class="aware-view" id="teachersView" style="display: none;">
+                    <div class="content-header">
+                        <div class="content-title">Teacher Management</div>
+                        <button class="btn btn-primary" onclick="inviteTeacherModal()">
+                            <span>📧</span> Invite Teacher
+                        </button>
+                    </div>
+                    
+                    <div class="content-card">
+                        <div class="card-header">
+                            <div class="card-title">All Teachers</div>
+                            <div>
+                                <input type="text" id="teacherSearch" placeholder="Search teachers..." class="form-control" style="width: 200px;">
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="teachers-grid" id="teachersGrid">
+                                <!-- Teachers will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- School Settings View (School Admin Only) -->
+                <div class="aware-view" id="schoolSettingsView" style="display: none;">
+                    <div class="content-header">
+                        <div class="content-title">School Settings</div>
+                        <button class="btn btn-primary" onclick="saveSchoolSettings()">
+                            <span>💾</span> Save All Settings
+                        </button>
+                    </div>
+                    
+                    <!-- School Code Display -->
+                    <div class="school-code-display">
+                        <h3>Your School Code</h3>
+                        <div class="school-code" id="schoolCodeDisplay">XXXXXX</div>
+                        <p style="color: #666; margin-bottom: 15px;">Share this code with teachers so they can join your school</p>
+                        <button class="btn btn-outline" onclick="copySchoolCode()">
+                            <span>📋</span> Copy School Code
+                        </button>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <div class="settings-section-title">School Information</div>
+                        <div class="form-group">
+                            <label for="schoolNameSettings">School Name</label>
+                            <input type="text" id="schoolNameSettings" class="form-control" placeholder="Enter school name">
+                        </div>
+                        <div class="form-group">
+                            <label for="schoolTypeSettings">School Type</label>
+                            <select id="schoolTypeSettings" class="form-control">
+                                <option value="">Select school type</option>
+                                <option value="elementary">Elementary School</option>
+                                <option value="middle">Middle School</option>
+                                <option value="high">High School</option>
+                                <option value="college">College/University</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <div class="settings-section-title">Website Restrictions</div>
+                        <p style="color: #666; margin-bottom: 15px;">These restrictions apply to ALL students in your school</p>
+                        <div class="form-group">
+                            <label for="globalBlocks">Globally Blocked Websites (one per line)</label>
+                            <textarea id="globalBlocks" rows="6" placeholder="Enter websites to block for all students" class="form-control"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <div class="settings-section-title">Monitoring Settings</div>
+                        <div class="form-group">
+                            <label for="monitoringHours">Monitoring Hours</label>
+                            <div class="time-input-group">
+                                <input type="time" id="monitoringStart" class="form-control" value="08:00">
+                                <span>to</span>
+                                <input type="time" id="monitoringEnd" class="form-control" value="16:00">
+                            </div>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="enableScreenshots" checked>
+                            <label for="enableScreenshots">Enable screenshot capture</label>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="enableActivityLogging" checked>
+                            <label for="enableActivityLogging">Enable activity logging</label>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="enableMessaging" checked>
+                            <label for="enableMessaging">Enable student messaging</label>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="requireParentApproval">
+                            <label for="requireParentApproval">Require parent approval for student access</label>
                         </div>
                     </div>
                 </div>
@@ -1705,50 +1867,281 @@
         </div>
     </div>
 
-<script>
-    // Global variables
-    let currentUser = null;
-    let currentView = 'overview';
-    let currentClassSection = 'classes';
-    let monitoringInterval;
-    let selectedStudent = null;
-    let selectedDays = [];
-    
-    // Initialize the application
-    function initializeApp() {
-        // Check if user is already logged in
-        const savedUser = localStorage.getItem('currentUser');
+    <div class="modal" id="inviteTeacherModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Invite Teacher to School</div>
+                <button class="modal-close" onclick="closeModal('inviteTeacherModal')">×</button>
+            </div>
+            
+            <div class="form-group">
+                <label for="inviteTeacherEmail">Teacher Email Address</label>
+                <input type="email" id="inviteTeacherEmail" placeholder="Enter teacher's email" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="inviteTeacherName">Teacher Name</label>
+                <input type="text" id="inviteTeacherName" placeholder="Enter teacher's full name" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label>School Code</label>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: var(--radius-md); font-family: monospace; font-size: 1.2rem; text-align: center; font-weight: bold;">
+                    <span id="inviteSchoolCode">XXXXXX</span>
+                </div>
+                <div style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                    Share this code with the teacher so they can register
+                </div>
+            </div>
+            
+            <button class="btn btn-primary" onclick="sendTeacherInvite()" style="width: 100%; padding: 14px;">
+                <span>📧</span> Send Invitation
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let currentView = 'overview';
+        let currentClassSection = 'classes';
+        let monitoringInterval;
+        let selectedStudent = null;
+        let selectedDays = [];
         
-        if (savedUser) {
-            try {
-                currentUser = JSON.parse(savedUser);
-                
-                // Both school admins AND teachers can access Aware dashboard
-                if (currentUser.role === 'school' || currentUser.role === 'teacher') {
-                    showAwareDashboard();
-                } else {
-                    // Show login page
+        // Initialize the application
+        function initializeApp() {
+            // Check if user is already logged in
+            const savedUser = localStorage.getItem('currentUser');
+            
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    
+                    // Both school admins AND teachers can access Aware dashboard
+                    if (currentUser.role === 'school' || currentUser.role === 'teacher') {
+                        showAwareDashboard();
+                    } else {
+                        // Show login page
+                        showAuthTab('school');
+                    }
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
                     showAuthTab('school');
                 }
-            } catch (e) {
-                console.error('Error parsing user data:', e);
+            } else {
+                // No user logged in, show login page
                 showAuthTab('school');
             }
-        } else {
-            // No user logged in, show login page
-            showAuthTab('school');
+            
+            // Initialize data structure if it doesn't exist
+            initializeData();
         }
         
-        // Initialize data structure if it doesn't exist
-        initializeData();
-    }
-    
-    // Initialize data structure - MATCHES MAIN DASHBOARD
-    function initializeData() {
-        const data = getSharedData();
+        // Initialize data structure
+        function initializeData() {
+            const data = getSharedData();
+            
+            // Ensure all required structures exist
+            if (!data.awareSettings) {
+                data.awareSettings = {
+                    globalBlocks: ['youtube.com', 'facebook.com', 'instagram.com', 'tiktok.com', 'games.com'],
+                    monitoringHours: { start: '08:00', end: '16:00' },
+                    enableScreenshots: true,
+                    enableActivityLogging: true,
+                    enableMessaging: true,
+                    requireParentApproval: false
+                };
+            }
+            
+            // Ensure activity logs exist
+            if (!data.activityLogs) data.activityLogs = {};
+            
+            // Ensure student locks exist
+            if (!data.studentLocks) data.studentLocks = {};
+            
+            // Ensure teacher control exists
+            if (!data.teacherControl) data.teacherControl = {};
+            
+            // Ensure messages exist
+            if (!data.messages) data.messages = {};
+            
+            // Ensure screenshots exist
+            if (!data.screenshots) data.screenshots = {};
+            
+            saveSharedData(data);
+        }
         
-        // Ensure all required structures exist
-        if (!data.awareSettings) {
+        // Get shared data
+        function getSharedData() {
+            const defaultData = {
+                schools: {},
+                teachers: {},
+                parents: {},
+                classes: {},
+                students: {},
+                parentCodes: {},
+                bypassCodes: {},
+                schedules: {},
+                schoolSettings: {},
+                activityLogs: {},
+                awareSettings: {},
+                chatMessages: {},
+                whiteboardData: {},
+                teacherControl: {},
+                studentLocks: {},
+                screenshots: {},
+                connectionCodes: {},
+                lastUpdated: Date.now()
+            };
+            
+            try {
+                const stored = localStorage.getItem('classStacksData');
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    return {...defaultData, ...parsed};
+                }
+            } catch (e) {
+                console.error('Error parsing stored data:', e);
+            }
+            
+            return defaultData;
+        }
+        
+        // Save shared data
+        function saveSharedData(data) {
+            data.lastUpdated = Date.now();
+            localStorage.setItem('classStacksData', JSON.stringify(data));
+        }
+        
+        // Show authentication tab
+        function showAuthTab(tab) {
+            document.getElementById('schoolTab').classList.remove('active');
+            document.getElementById('teacherTab').classList.remove('active');
+            
+            document.getElementById('schoolAuth').style.display = 'none';
+            document.getElementById('schoolRegistration').style.display = 'none';
+            document.getElementById('teacherAuth').style.display = 'none';
+            document.getElementById('teacherRegistration').style.display = 'none';
+            
+            if (tab === 'school') {
+                document.getElementById('schoolTab').classList.add('active');
+                document.getElementById('schoolAuth').style.display = 'block';
+            } else if (tab === 'teacher') {
+                document.getElementById('teacherTab').classList.add('active');
+                document.getElementById('teacherAuth').style.display = 'block';
+            }
+        }
+        
+        // Show school registration
+        function showSchoolRegistration() {
+            document.getElementById('schoolAuth').style.display = 'none';
+            document.getElementById('schoolRegistration').style.display = 'block';
+        }
+        
+        // Show school login
+        function showSchoolLogin() {
+            document.getElementById('schoolRegistration').style.display = 'none';
+            document.getElementById('schoolAuth').style.display = 'block';
+        }
+        
+        // Show teacher registration
+        function showTeacherRegistration() {
+            document.getElementById('teacherAuth').style.display = 'none';
+            document.getElementById('teacherRegistration').style.display = 'block';
+        }
+        
+        // Show teacher login
+        function showTeacherLogin() {
+            document.getElementById('teacherRegistration').style.display = 'none';
+            document.getElementById('teacherAuth').style.display = 'block';
+        }
+        
+        // Generate school code
+        function generateSchoolCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 6; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+        
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Show success message
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            setTimeout(() => {
+                successDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Register a new school
+        function registerSchool() {
+            const schoolName = document.getElementById('schoolName').value;
+            const schoolType = document.getElementById('schoolType').value;
+            const adminName = document.getElementById('adminName').value;
+            const adminEmail = document.getElementById('adminEmail').value;
+            const adminPassword = document.getElementById('adminPassword').value;
+            
+            if (!schoolName || !schoolType || !adminName || !adminEmail || !adminPassword) {
+                showError('Please fill in all required fields');
+                return;
+            }
+            
+            if (adminPassword.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+            
+            const data = getSharedData();
+            
+            // Check if email already exists
+            const existingUser = Object.values(data.schools).find(school => 
+                school.email === adminEmail
+            );
+            
+            if (existingUser) {
+                showError('A school with this email already exists');
+                return;
+            }
+            
+            // Create school account
+            const schoolId = 'school_' + Date.now();
+            const schoolCode = generateSchoolCode();
+            
+            data.schools[schoolId] = {
+                id: schoolId,
+                name: schoolName,
+                type: schoolType,
+                adminName: adminName,
+                email: adminEmail,
+                password: adminPassword,
+                role: 'school',
+                schoolCode: schoolCode,
+                created: Date.now()
+            };
+            
+            // Initialize school settings
+            data.schoolSettings[schoolId] = {
+                blockedSites: ['youtube.com', 'facebook.com', 'instagram.com', 'tiktok.com'],
+                allowBrowsing: true,
+                requireStudentNames: true,
+                enableScreenshots: true
+            };
+            
+            // Initialize aware settings
             data.awareSettings = {
                 globalBlocks: ['youtube.com', 'facebook.com', 'instagram.com', 'tiktok.com', 'games.com'],
                 monitoringHours: { start: '08:00', end: '16:00' },
@@ -1757,1847 +2150,2027 @@
                 enableMessaging: true,
                 requireParentApproval: false
             };
+            
+            // Save data
+            saveSharedData(data);
+            
+            // Set current user
+            currentUser = data.schools[schoolId];
+            
+            // Save to localStorage
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            // Show success message and dashboard
+            showSuccess('School account created successfully! School Code: ' + schoolCode);
+            setTimeout(() => {
+                showAwareDashboard();
+            }, 1500);
         }
         
-        // Ensure activity logs exist
-        if (!data.activityLogs) data.activityLogs = {};
-        
-        // Ensure student locks exist
-        if (!data.studentLocks) data.studentLocks = {};
-        
-        // Ensure teacher control exists
-        if (!data.teacherControl) data.teacherControl = {};
-        
-        // Ensure messages exist
-        if (!data.messages) data.messages = {};
-        
-        // Ensure screenshots exist
-        if (!data.screenshots) data.screenshots = {};
-        
-        saveSharedData(data);
-    }
-    
-    // Get shared data - MATCHES OTHER COMPONENTS
-    function getSharedData() {
-        const defaultData = {
-            schools: {},
-            teachers: {},
-            parents: {},
-            classes: {},
-            students: {},
-            parentCodes: {},
-            bypassCodes: {},
-            schedules: {},
-            schoolSettings: {},
-            activityLogs: {},
-            awareSettings: {},
-            chatMessages: {},
-            whiteboardData: {},
-            teacherControl: {},
-            studentLocks: {},
-            screenshots: {},
-            connectionCodes: {},
-            lastUpdated: Date.now()
-        };
-        
-        try {
-            const stored = localStorage.getItem('classStacksData');
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                return {...defaultData, ...parsed};
+        // Login as school admin
+        function loginSchool() {
+            const email = document.getElementById('schoolEmail').value;
+            const password = document.getElementById('schoolPassword').value;
+            
+            if (!email || !password) {
+                showError('Please enter both email and password');
+                return;
             }
-        } catch (e) {
-            console.error('Error parsing stored data:', e);
+            
+            const data = getSharedData();
+            
+            // Find school with matching credentials
+            const school = Object.values(data.schools).find(s => 
+                s.email === email && s.password === password
+            );
+            
+            if (school) {
+                currentUser = school;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showAwareDashboard();
+            } else {
+                showError('Invalid email or password');
+            }
         }
         
-        return defaultData;
-    }
-    
-    // Save shared data
-    function saveSharedData(data) {
-        data.lastUpdated = Date.now();
-        localStorage.setItem('classStacksData', JSON.stringify(data));
-    }
-    
-    // Show authentication tab
-    function showAuthTab(tab) {
-        document.getElementById('schoolTab').classList.remove('active');
-        document.getElementById('teacherTab').classList.remove('active');
-        
-        document.getElementById('schoolAuth').style.display = 'none';
-        document.getElementById('schoolRegistration').style.display = 'none';
-        document.getElementById('teacherAuth').style.display = 'none';
-        document.getElementById('teacherRegistration').style.display = 'none';
-        
-        if (tab === 'school') {
-            document.getElementById('schoolTab').classList.add('active');
-            document.getElementById('schoolAuth').style.display = 'block';
-        } else if (tab === 'teacher') {
-            document.getElementById('teacherTab').classList.add('active');
-            document.getElementById('teacherAuth').style.display = 'block';
-        }
-    }
-    
-    // Show school registration
-    function showSchoolRegistration() {
-        document.getElementById('schoolAuth').style.display = 'none';
-        document.getElementById('schoolRegistration').style.display = 'block';
-    }
-    
-    // Show school login
-    function showSchoolLogin() {
-        document.getElementById('schoolRegistration').style.display = 'none';
-        document.getElementById('schoolAuth').style.display = 'block';
-    }
-    
-    // Show teacher registration
-    function showTeacherRegistration() {
-        document.getElementById('teacherAuth').style.display = 'none';
-        document.getElementById('teacherRegistration').style.display = 'block';
-    }
-    
-    // Show teacher login
-    function showTeacherLogin() {
-        document.getElementById('teacherRegistration').style.display = 'none';
-        document.getElementById('teacherAuth').style.display = 'block';
-    }
-    
-    // Generate school code - MATCHES MAIN DASHBOARD
-    function generateSchoolCode() {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return code;
-    }
-    
-    // Show error message
-    function showError(message) {
-        const errorDiv = document.getElementById('errorMessage');
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
-        setTimeout(() => {
-            errorDiv.style.display = 'none';
-        }, 5000);
-    }
-    
-    // Show success message
-    function showSuccess(message) {
-        const successDiv = document.getElementById('successMessage');
-        successDiv.textContent = message;
-        successDiv.style.display = 'block';
-        setTimeout(() => {
-            successDiv.style.display = 'none';
-        }, 5000);
-    }
-    
-    // Register a new school - MATCHES MAIN DASHBOARD
-    function registerSchool() {
-        const schoolName = document.getElementById('schoolName').value;
-        const schoolType = document.getElementById('schoolType').value;
-        const adminName = document.getElementById('adminName').value;
-        const adminEmail = document.getElementById('adminEmail').value;
-        const adminPassword = document.getElementById('adminPassword').value;
-        
-        if (!schoolName || !schoolType || !adminName || !adminEmail || !adminPassword) {
-            showError('Please fill in all required fields');
-            return;
-        }
-        
-        if (adminPassword.length < 6) {
-            showError('Password must be at least 6 characters long');
-            return;
-        }
-        
-        const data = getSharedData();
-        
-        // Check if email already exists
-        const existingUser = Object.values(data.schools).find(school => 
-            school.email === adminEmail
-        );
-        
-        if (existingUser) {
-            showError('A school with this email already exists');
-            return;
-        }
-        
-        // Create school account
-        const schoolId = 'school_' + Date.now();
-        const schoolCode = generateSchoolCode();
-        
-        data.schools[schoolId] = {
-            id: schoolId,
-            name: schoolName,
-            type: schoolType,
-            adminName: adminName,
-            email: adminEmail,
-            password: adminPassword,
-            role: 'school',
-            schoolCode: schoolCode,
-            created: Date.now()
-        };
-        
-        // Initialize school settings
-        data.schoolSettings[schoolId] = {
-            blockedSites: ['youtube.com', 'facebook.com', 'instagram.com', 'tiktok.com'],
-            allowBrowsing: true,
-            requireStudentNames: true,
-            enableScreenshots: true
-        };
-        
-        // Initialize aware settings
-        data.awareSettings = {
-            globalBlocks: ['youtube.com', 'facebook.com', 'instagram.com', 'tiktok.com', 'games.com'],
-            monitoringHours: { start: '08:00', end: '16:00' },
-            enableScreenshots: true,
-            enableActivityLogging: true,
-            enableMessaging: true,
-            requireParentApproval: false
-        };
-        
-        // Save data
-        saveSharedData(data);
-        
-        // Set current user
-        currentUser = data.schools[schoolId];
-        
-        // Save to localStorage
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        
-        // Show success message and dashboard
-        showSuccess('School account created successfully! School Code: ' + schoolCode);
-        setTimeout(() => {
-            showAwareDashboard();
-        }, 1500);
-    }
-    
-    // Login as school admin - MATCHES MAIN DASHBOARD
-    function loginSchool() {
-        const email = document.getElementById('schoolEmail').value;
-        const password = document.getElementById('schoolPassword').value;
-        
-        if (!email || !password) {
-            showError('Please enter both email and password');
-            return;
-        }
-        
-        const data = getSharedData();
-        
-        // Find school with matching credentials
-        const school = Object.values(data.schools).find(s => 
-            s.email === email && s.password === password
-        );
-        
-        if (school) {
-            currentUser = school;
+        // Register a new teacher
+        function registerTeacher() {
+            const teacherName = document.getElementById('teacherName').value;
+            const teacherEmail = document.getElementById('teacherRegEmail').value;
+            const teacherPassword = document.getElementById('teacherRegPassword').value;
+            const schoolCode = document.getElementById('teacherSchoolCode').value.toUpperCase();
+            
+            if (!teacherName || !teacherEmail || !teacherPassword || !schoolCode) {
+                showError('Please fill in all required fields');
+                return;
+            }
+            
+            if (teacherPassword.length < 6) {
+                showError('Password must be at least 6 characters long');
+                return;
+            }
+            
+            const data = getSharedData();
+            
+            // Check if email already exists
+            const existingUser = Object.values(data.teachers).find(teacher => 
+                teacher.email === teacherEmail
+            );
+            
+            if (existingUser) {
+                showError('A teacher with this email already exists');
+                return;
+            }
+            
+            // Find school with matching code
+            const school = Object.values(data.schools).find(s => 
+                s.schoolCode === schoolCode
+            );
+            
+            if (!school) {
+                showError('Invalid school code. Please check with your school administrator.');
+                return;
+            }
+            
+            // Create teacher account
+            const teacherId = 'teacher_' + Date.now();
+            data.teachers[teacherId] = {
+                id: teacherId,
+                name: teacherName,
+                email: teacherEmail,
+                password: teacherPassword,
+                schoolId: school.id,
+                schoolName: school.name,
+                schoolCode: schoolCode,
+                role: 'teacher',
+                created: Date.now()
+            };
+            
+            // Save data
+            saveSharedData(data);
+            
+            // Set current user
+            currentUser = data.teachers[teacherId];
+            
+            // Save to localStorage
             localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            showAwareDashboard();
-        } else {
-            showError('Invalid email or password');
-        }
-    }
-    
-    // Register a new teacher - MATCHES MAIN DASHBOARD
-    function registerTeacher() {
-        const teacherName = document.getElementById('teacherName').value;
-        const teacherEmail = document.getElementById('teacherRegEmail').value;
-        const teacherPassword = document.getElementById('teacherRegPassword').value;
-        const schoolName = document.getElementById('schoolNameTeacher').value;
-        
-        if (!teacherName || !teacherEmail || !teacherPassword || !schoolName) {
-            showError('Please fill in all required fields');
-            return;
+            
+            // Show success message and dashboard
+            showSuccess('Teacher account created successfully!');
+            setTimeout(() => {
+                showAwareDashboard();
+            }, 1500);
         }
         
-        if (teacherPassword.length < 6) {
-            showError('Password must be at least 6 characters long');
-            return;
+        // Login as teacher
+        function loginTeacher() {
+            const email = document.getElementById('teacherEmail').value;
+            const password = document.getElementById('teacherPassword').value;
+            
+            if (!email || !password) {
+                showError('Please enter both email and password');
+                return;
+            }
+            
+            const data = getSharedData();
+            
+            // Find teacher with matching credentials
+            const teacher = Object.values(data.teachers).find(t => 
+                t.email === email && t.password === password
+            );
+            
+            if (teacher) {
+                currentUser = teacher;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                showAwareDashboard();
+            } else {
+                showError('Invalid email or password');
+            }
         }
         
-        const data = getSharedData();
-        
-        // Check if email already exists
-        const existingUser = Object.values(data.teachers).find(teacher => 
-            teacher.email === teacherEmail
-        );
-        
-        if (existingUser) {
-            showError('A teacher with this email already exists');
-            return;
+        // Show Aware dashboard
+        function showAwareDashboard() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('awareDashboard').style.display = 'flex';
+            
+            // Update user info
+            document.getElementById('userName').textContent = currentUser.name || currentUser.adminName;
+            document.getElementById('userAvatar').textContent = (currentUser.name || currentUser.adminName).charAt(0).toUpperCase();
+            document.getElementById('userRole').textContent = currentUser.role === 'school' ? 'School Admin' : 'Teacher';
+            
+            // Show/hide tabs based on role
+            if (currentUser.role === 'school') {
+                document.getElementById('teachersTab').style.display = 'block';
+                document.getElementById('schoolSettingsTab').style.display = 'block';
+            } else {
+                document.getElementById('teachersTab').style.display = 'none';
+                document.getElementById('schoolSettingsTab').style.display = 'none';
+            }
+            
+            // Apply role-based restrictions
+            applyRoleRestrictions();
+            
+            // Start monitoring
+            startMonitoring();
+            
+            // Update dashboard
+            updateAwareDashboard();
         }
-        
-        // Create teacher account
-        const teacherId = 'teacher_' + Date.now();
-        data.teachers[teacherId] = {
-            id: teacherId,
-            name: teacherName,
-            email: teacherEmail,
-            password: teacherPassword,
-            school: schoolName,
-            role: 'teacher',
-            created: Date.now()
-        };
-        
-        // Save data
-        saveSharedData(data);
-        
-        // Set current user
-        currentUser = data.teachers[teacherId];
-        
-        // Save to localStorage
-        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-        
-        // Show success message and dashboard
-        showSuccess('Teacher account created successfully!');
-        setTimeout(() => {
-            showAwareDashboard();
-        }, 1500);
-    }
-    
-    // Login as teacher - MATCHES MAIN DASHBOARD
-    function loginTeacher() {
-        const email = document.getElementById('teacherEmail').value;
-        const password = document.getElementById('teacherPassword').value;
-        
-        if (!email || !password) {
-            showError('Please enter both email and password');
-            return;
-        }
-        
-        const data = getSharedData();
-        
-        // Find teacher with matching credentials
-        const teacher = Object.values(data.teachers).find(t => 
-            t.email === email && t.password === password
-        );
-        
-        if (teacher) {
-            currentUser = teacher;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            showAwareDashboard();
-        } else {
-            showError('Invalid email or password');
-        }
-    }
-    
-    // Show Aware dashboard
-    function showAwareDashboard() {
-        document.getElementById('authContainer').style.display = 'none';
-        document.getElementById('awareDashboard').style.display = 'flex';
-        
-        // Update user info
-        document.getElementById('userName').textContent = currentUser.name || currentUser.adminName;
-        document.getElementById('userAvatar').textContent = (currentUser.name || currentUser.adminName).charAt(0).toUpperCase();
-        document.getElementById('userRole').textContent = currentUser.role === 'school' ? 'School Admin' : 'Teacher';
         
         // Apply role-based restrictions
-        applyRoleRestrictions();
-        
-        // Start monitoring
-        startMonitoring();
-        
-        // Update dashboard
-        updateAwareDashboard();
-    }
-    
-    // Apply role-based restrictions
-    function applyRoleRestrictions() {
-        const isTeacher = currentUser.role === 'teacher';
-        
-        // Teacher can only create classes for themselves
-        if (isTeacher) {
-            // Add teacher restriction indicator to certain elements
-            const adminOnlyButtons = document.querySelectorAll('.btn-warning, .btn-success');
-            adminOnlyButtons.forEach(btn => {
-                if (btn.textContent.includes('Bypass') || btn.textContent.includes('Schedule')) {
-                    btn.classList.add('teacher-restricted');
-                    btn.onclick = function() {
-                        alert('This feature is only available to School Administrators');
-                    };
-                }
-            });
-        }
-    }
-    
-    // Show aware view
-    function showAwareView(view) {
-        currentView = view;
-        
-        // Update sidebar active item
-        document.querySelectorAll('.sidebar-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        
-        // Find and activate the correct sidebar item
-        const sidebarItems = document.querySelectorAll('.sidebar-item');
-        for (let i = 0; i < sidebarItems.length; i++) {
-            if (sidebarItems[i].textContent.includes(getViewName(view))) {
-                sidebarItems[i].classList.add('active');
-                break;
-            }
-        }
-        
-        document.querySelectorAll('.aware-view').forEach(view => {
-            view.style.display = 'none';
-        });
-        
-        document.getElementById(view + 'View').style.display = 'block';
-        
-        // Update the view
-        updateAwareView();
-    }
-    
-    // Get view name from ID
-    function getViewName(viewId) {
-        const viewNames = {
-            'overview': 'Overview',
-            'monitoring': 'Real-time Monitoring',
-            'students': 'Student Management',
-            'classes': 'Class Management',
-            'activity': 'Activity Timeline'
-        };
-        return viewNames[viewId] || viewId;
-    }
-    
-    // Update aware view
-    function updateAwareView() {
-        switch(currentView) {
-            case 'overview':
-                updateOverview();
-                break;
-            case 'monitoring':
-                updateMonitoring();
-                break;
-            case 'students':
-                updateStudents();
-                break;
-            case 'classes':
-                updateClasses();
-                break;
-            case 'activity':
-                updateActivity();
-                break;
-        }
-    }
-    
-    // Update overview
-    function updateOverview() {
-        const data = getSharedData();
-        
-        // Get statistics
-        const totalStudents = Object.values(data.students).length;
-        const activeStudents = getActiveStudentsCount(data);
-        const activeClasses = Object.values(data.classes).filter(c => c.active !== false).length;
-        const blockedAttempts = getBlockedAttemptsCount(data);
-        
-        // Update stats
-        document.getElementById('awareStudents').textContent = totalStudents;
-        document.getElementById('awareActive').textContent = activeStudents;
-        document.getElementById('awareClasses').textContent = activeClasses;
-        document.getElementById('awareBlocked').textContent = blockedAttempts;
-        
-        // Update recent activity
-        updateRecentActivity();
-        
-        // Update top websites
-        updateTopWebsites();
-        
-        // Update active classes
-        updateActiveClasses();
-    }
-    
-    // Get count of active students (online in last 30 seconds)
-    function getActiveStudentsCount(data) {
-        const now = Date.now();
-        return Object.values(data.students || {}).filter(s => 
-            s.lastActive && (now - s.lastActive) < 30000
-        ).length;
-    }
-    
-    // Get count of blocked attempts
-    function getBlockedAttemptsCount(data) {
-        let count = 0;
-        Object.values(data.activityLogs || {}).forEach(logs => {
-            if (Array.isArray(logs)) {
-                logs.forEach(log => {
-                    if (log.action && log.action.includes('Blocked')) {
-                        count++;
+        function applyRoleRestrictions() {
+            const isTeacher = currentUser.role === 'teacher';
+            
+            if (isTeacher) {
+                // Hide admin-only buttons
+                const adminButtons = document.querySelectorAll('.btn-warning, .btn-success');
+                adminButtons.forEach(btn => {
+                    if (btn.textContent.includes('Bypass') || btn.textContent.includes('Schedule')) {
+                        btn.classList.add('teacher-restricted');
+                        btn.onclick = function() {
+                            alert('This feature is only available to School Administrators');
+                        };
                     }
                 });
             }
-        });
-        return count;
-    }
-    
-    // Update recent activity
-    function updateRecentActivity() {
-        const data = getSharedData();
-        const activities = getAllActivities(data).sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+        }
         
-        const container = document.getElementById('recentActivity');
-        container.innerHTML = '';
-        
-        activities.forEach(activity => {
-            const item = document.createElement('div');
-            item.className = 'timeline-item';
+        // Show aware view
+        function showAwareView(view) {
+            currentView = view;
             
-            let icon = '📊';
-            if (activity.action && activity.action.includes('Visited')) icon = '🌐';
-            else if (activity.action && activity.action.includes('Message')) icon = '💬';
-            else if (activity.action && activity.action.includes('Blocked')) icon = '🚫';
+            // Update sidebar active item
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
             
-            item.innerHTML = `
-                <div class="timeline-icon">${icon}</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">${activity.action || 'Activity'}</div>
-                    <div class="timeline-desc">${getStudentNameById(activity.studentId) || ''}</div>
-                </div>
-                <div class="timeline-time">${formatTime(activity.timestamp)}</div>
-            `;
-            container.appendChild(item);
-        });
-    }
-    
-    // Get all activities from all students
-    function getAllActivities(data) {
-        const allActivities = [];
-        Object.entries(data.activityLogs || {}).forEach(([studentId, logs]) => {
-            if (Array.isArray(logs)) {
-                logs.forEach(log => {
-                    allActivities.push({
-                        ...log,
-                        studentId: studentId
-                    });
-                });
-            }
-        });
-        return allActivities;
-    }
-    
-    // Update top websites
-    function updateTopWebsites() {
-        const data = getSharedData();
-        const websiteCounts = {};
-        
-        getAllActivities(data).forEach(activity => {
-            if (activity.action && activity.action.includes('Visited')) {
-                const match = activity.action.match(/Visited.*\((https?:\/\/[^)]+)\)/);
-                if (match) {
-                    const url = match[1];
-                    const domain = url.replace('https://', '').replace('http://', '').split('/')[0];
-                    websiteCounts[domain] = (websiteCounts[domain] || 0) + 1;
+            // Find and activate the correct sidebar item
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            for (let i = 0; i < sidebarItems.length; i++) {
+                if (sidebarItems[i].textContent.includes(getViewName(view))) {
+                    sidebarItems[i].classList.add('active');
+                    break;
                 }
             }
-        });
-        
-        const topWebsites = Object.entries(websiteCounts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 5);
-        
-        const container = document.getElementById('topWebsites');
-        container.innerHTML = '';
-        
-        topWebsites.forEach(([website, count]) => {
-            const div = document.createElement('div');
-            div.className = 'timeline-item';
-            div.innerHTML = `
-                <div class="timeline-icon">🌐</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">${website}</div>
-                    <div class="timeline-desc">Visited ${count} times</div>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-    
-    // Update active classes
-    function updateActiveClasses() {
-        const data = getSharedData();
-        const activeClasses = Object.values(data.classes || {}).filter(c => c.active !== false).slice(0, 3);
-        
-        const container = document.getElementById('activeClasses');
-        container.innerHTML = '';
-        
-        activeClasses.forEach(cls => {
-            const studentCount = Object.values(data.students || {}).filter(s => s.classCode === cls.id).length;
-            const div = document.createElement('div');
-            div.className = 'timeline-item';
-            div.innerHTML = `
-                <div class="timeline-icon">👨‍🏫</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">${cls.name || cls.id}</div>
-                    <div class="timeline-desc">${studentCount || 0} students • ${cls.teacher || 'No teacher'}</div>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-    
-    // Update monitoring view
-    function updateMonitoring() {
-        const data = getSharedData();
-        
-        // Update class filter
-        const classFilter = document.getElementById('classFilter');
-        classFilter.innerHTML = '<option value="">All Classes</option>';
-        
-        Object.values(data.classes || {}).forEach(cls => {
-            const option = document.createElement('option');
-            option.value = cls.id;
-            option.textContent = cls.name || cls.id;
-            classFilter.appendChild(option);
-        });
-        
-        // Update students
-        updateMonitoringStudents();
-    }
-    
-    // Update monitoring students
-    function updateMonitoringStudents() {
-        const data = getSharedData();
-        const classFilter = document.getElementById('classFilter').value;
-        
-        let students = Object.values(data.students || {});
-        
-        // Filter by class if selected
-        if (classFilter) {
-            students = students.filter(s => s.classCode === classFilter);
+            
+            document.querySelectorAll('.aware-view').forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            document.getElementById(view + 'View').style.display = 'block';
+            
+            // Update the view
+            updateAwareView();
         }
         
-        const container = document.getElementById('monitoringStudents');
-        container.innerHTML = '';
+        // Get view name from ID
+        function getViewName(viewId) {
+            const viewNames = {
+                'overview': 'Overview',
+                'monitoring': 'Real-time Monitoring',
+                'students': 'Student Management',
+                'classes': 'Class Management',
+                'teachers': 'Teacher Management',
+                'schoolSettings': 'School Settings',
+                'activity': 'Activity Timeline'
+            };
+            return viewNames[viewId] || viewId;
+        }
         
-        students.forEach(student => {
-            const isActive = student.lastActive && (Date.now() - student.lastActive) < 30000;
-            const isLocked = data.studentLocks && data.studentLocks[student.id];
-            
-            // Get current tab info
-            const currentTab = student.tabs && student.tabs[student.activeTab || 0];
-            const activity = currentTab ? currentTab.title || currentTab.url : 'No activity';
-            
-            const card = document.createElement('div');
-            card.className = 'class-card';
-            card.style.cursor = 'pointer';
-            card.onclick = () => showStudentDetail(student.id);
-            
-            card.innerHTML = `
-                <div class="class-header">
-                    <div class="class-name">${student.name || 'Unknown Student'}</div>
-                    <div class="status-indicator ${isLocked ? 'status-locked' : (isActive ? 'status-active' : 'status-inactive')}">
-                        ${isLocked ? '🔒 Locked' : (isActive ? '● Active' : '○ Inactive')}
-                    </div>
-                </div>
-                <div class="class-info">
-                    <div>Class: ${getClassName(student.classCode) || 'Unknown'}</div>
-                    <div>Activity: ${activity}</div>
-                    <div>Last seen: ${student.lastActive ? formatTime(student.lastActive) : 'Never'}</div>
-                </div>
-                <div class="class-actions">
-                    <button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); requestScreenshot('${student.id}')">
-                        <span>📸</span> Screenshot
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); lockStudent('${student.id}')">
-                        <span>🔒</span> Lock
-                    </button>
-                    <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); unlockStudent('${student.id}')">
-                        <span>🔓</span> Unlock
-                    </button>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
-    
-    // Get class name by ID
-    function getClassName(classId) {
-        const data = getSharedData();
-        const cls = data.classes && data.classes[classId];
-        return cls ? cls.name : classId;
-    }
-    
-    // Filter students by class
-    function filterStudentsByClass() {
-        updateMonitoringStudents();
-    }
-    
-    // Update students view
-    function updateStudents() {
-        const data = getSharedData();
-        const students = Object.values(data.students || {});
-        
-        const container = document.getElementById('studentsTableContainer');
-        let html = `
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background: #f8f9fa; border-bottom: 2px solid #e1e5ee;">
-                        <th style="padding: 12px; text-align: left;">Name</th>
-                        <th style="padding: 12px; text-align: left;">Class</th>
-                        <th style="padding: 12px; text-align: left;">Status</th>
-                        <th style="padding: 12px; text-align: left;">Last Activity</th>
-                        <th style="padding: 12px; text-align: left;">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-        
-        students.forEach(student => {
-            const isActive = student.lastActive && (Date.now() - student.lastActive) < 30000;
-            const isLocked = data.studentLocks && data.studentLocks[student.id];
-            
-            // Get current tab info
-            const currentTab = student.tabs && student.tabs[student.activeTab || 0];
-            const activity = currentTab ? currentTab.title || currentTab.url : 'No activity';
-            
-            html += `
-                <tr style="border-bottom: 1px solid #e1e5ee;">
-                    <td style="padding: 12px;">${student.name || 'Unknown'}</td>
-                    <td style="padding: 12px;">${getClassName(student.classCode) || 'Unknown'}</td>
-                    <td style="padding: 12px;">
-                        <span class="status-indicator ${isLocked ? 'status-locked' : (isActive ? 'status-active' : 'status-inactive')}">
-                            ${isLocked ? 'Locked' : (isActive ? 'Active' : 'Inactive')}
-                        </span>
-                    </td>
-                    <td style="padding: 12px;">${activity}</td>
-                    <td style="padding: 12px;">
-                        <button class="btn btn-sm btn-primary" onclick="showStudentDetail('${student.id}')">View</button>
-                        <button class="btn btn-sm btn-warning" onclick="editStudent('${student.id}')">Edit</button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteStudent('${student.id}')">Remove</button>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        html += '</tbody></table>';
-        container.innerHTML = html;
-    }
-    
-    // Update classes view
-    function updateClasses() {
-        updateClassSection();
-    }
-    
-    // Show class section
-    function showClassSection(section) {
-        currentClassSection = section;
-        
-        // Update tabs
-        document.querySelectorAll('.section-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        
-        document.querySelectorAll('.section-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        
-        document.getElementById(section + 'Section').classList.add('active');
-        
-        // Find and activate tab
-        const tabs = document.querySelectorAll('.section-tab');
-        for (let i = 0; i < tabs.length; i++) {
-            if (tabs[i].textContent.includes(section.charAt(0).toUpperCase() + section.slice(1))) {
-                tabs[i].classList.add('active');
-                break;
+        // Update aware view
+        function updateAwareView() {
+            switch(currentView) {
+                case 'overview':
+                    updateOverview();
+                    break;
+                case 'monitoring':
+                    updateMonitoring();
+                    break;
+                case 'students':
+                    updateStudents();
+                    break;
+                case 'classes':
+                    updateClasses();
+                    break;
+                case 'teachers':
+                    updateTeachers();
+                    break;
+                case 'schoolSettings':
+                    updateSchoolSettings();
+                    break;
+                case 'activity':
+                    updateActivity();
+                    break;
             }
         }
         
-        updateClassSection();
-    }
-    
-    // Update class section
-    function updateClassSection() {
-        switch(currentClassSection) {
-            case 'classes':
-                updateClassesGrid();
-                break;
-            case 'schedules':
-                updateSchedulesGrid();
-                break;
-            case 'bypass':
-                updateBypassCodesGrid();
-                break;
-            case 'settings':
-                updateSettings();
-                break;
-        }
-    }
-    
-    // Update classes grid
-    function updateClassesGrid() {
-        const data = getSharedData();
-        const classes = Object.values(data.classes || {});
-        
-        const container = document.getElementById('classesGrid');
-        container.innerHTML = '';
-        
-        classes.forEach(cls => {
-            const studentCount = Object.values(data.students || {}).filter(s => s.classCode === cls.id).length;
-            const scheduleCount = Object.values(data.schedules || {}).filter(s => s.classId === cls.id).length;
+        // Update overview
+        function updateOverview() {
+            const data = getSharedData();
             
-            const card = document.createElement('div');
-            card.className = 'class-card';
+            // Get statistics
+            const totalStudents = Object.values(data.students).length;
+            const activeStudents = getActiveStudentsCount(data);
+            const activeClasses = Object.values(data.classes).filter(c => c.active !== false).length;
+            const blockedAttempts = getBlockedAttemptsCount(data);
             
-            card.innerHTML = `
-                <div class="class-header">
-                    <div class="class-name">${cls.name || cls.id}</div>
-                    <div class="class-code">${cls.subject || 'No subject'}</div>
-                </div>
-                <div class="class-info">
-                    <div>Grade: ${cls.grade || 'Not specified'}</div>
-                    <div>Teacher: ${cls.teacher || 'Not assigned'}</div>
-                    <div>Blocked sites: ${cls.blockedSites ? cls.blockedSites.length : 0}</div>
-                </div>
-                <div class="class-stats">
-                    <div class="class-stat">
-                        <div class="class-stat-value">${studentCount}</div>
-                        <div class="class-stat-label">Students</div>
-                    </div>
-                    <div class="class-stat">
-                        <div class="class-stat-value">${scheduleCount}</div>
-                        <div class="class-stat-label">Schedules</div>
-                    </div>
-                    <div class="class-stat">
-                        <div class="class-stat-value">${cls.active === false ? 'Inactive' : 'Active'}</div>
-                        <div class="class-stat-label">Status</div>
-                    </div>
-                </div>
-                <div class="class-actions">
-                    <button class="btn btn-sm btn-primary" onclick="viewClassDetails('${cls.id}')">
-                        <span>👁️</span> View
-                    </button>
-                    <button class="btn btn-sm btn-warning" onclick="editClass('${cls.id}')">
-                        <span>✏️</span> Edit
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteClass('${cls.id}')">
-                        <span>🗑️</span> Delete
-                    </button>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
-    
-    // Update schedules grid
-    function updateSchedulesGrid() {
-        const data = getSharedData();
-        const schedules = Object.values(data.schedules || {});
-        
-        const container = document.getElementById('schedulesGrid');
-        container.innerHTML = '';
-        
-        schedules.forEach(schedule => {
-            const cls = data.classes && data.classes[schedule.classId];
-            const card = document.createElement('div');
-            card.className = 'schedule-card';
-            card.onclick = () => viewScheduleDetails(schedule.id);
+            // Update stats
+            document.getElementById('awareStudents').textContent = totalStudents;
+            document.getElementById('awareActive').textContent = activeStudents;
+            document.getElementById('awareClasses').textContent = activeClasses;
+            document.getElementById('awareBlocked').textContent = blockedAttempts;
             
-            const days = schedule.days || [];
-            const dayNames = { mon: 'M', tue: 'T', wed: 'W', thu: 'T', fri: 'F', sat: 'S', sun: 'S' };
+            // Update recent activity
+            updateRecentActivity();
             
-            card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h4 style="margin: 0;">${cls ? cls.name : schedule.classId}</h4>
-                    <span class="status-indicator ${schedule.active === false ? 'status-inactive' : 'status-active'}">
-                        ${schedule.active === false ? 'Inactive' : 'Active'}
-                    </span>
-                </div>
-                <div class="schedule-days">
-                    ${Object.entries(dayNames).map(([day, letter]) => `
-                        <div class="schedule-day ${days.includes(day) ? 'active' : ''}">${letter}</div>
-                    `).join('')}
-                </div>
-                <div class="schedule-time">${schedule.startTime || '09:00'} - ${schedule.endTime || '10:00'}</div>
-                <div style="margin-top: 10px; font-size: 0.9rem; color: #666;">
-                    Type: ${schedule.type || 'monitoring'}
-                </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); editSchedule('${schedule.id}')">
-                        Edit
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteSchedule('${schedule.id}')">
-                        Delete
-                    </button>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
-    
-    // Update bypass codes grid
-    function updateBypassCodesGrid() {
-        const data = getSharedData();
-        const bypassCodes = Object.values(data.bypassCodes || {});
-        
-        const container = document.getElementById('bypassCodesGrid');
-        container.innerHTML = '';
-        
-        bypassCodes.forEach(code => {
-            const card = document.createElement('div');
-            card.className = 'bypass-card';
+            // Update top websites
+            updateTopWebsites();
             
-            let typeLabel = code.type || 'Student';
-            if (code.type === 'parent') typeLabel = 'Parent';
-            else if (code.type === 'emergency') typeLabel = 'Emergency';
-            else if (code.type === 'teacher') typeLabel = 'Teacher';
-            
-            const used = code.usageCount || 0;
-            const limit = code.maxUsage || 0;
-            const remaining = limit === 0 ? 'Unlimited' : limit - used;
-            const isExpired = code.expiry && Date.now() > code.expiry;
-            
-            card.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <h4 style="margin: 0;">${typeLabel} Code</h4>
-                    <span class="status-indicator ${isExpired ? 'status-inactive' : 'status-active'}">
-                        ${isExpired ? 'Expired' : 'Active'}
-                    </span>
-                </div>
-                <div class="bypass-code">${code.code}</div>
-                <div style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
-                    ${code.notes || 'No description'}
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-                    <div>Used: ${used}/${limit === 0 ? '∞' : limit}</div>
-                    <div>Expires: ${code.expiry ? formatDate(code.expiry) : 'Never'}</div>
-                </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn btn-sm btn-warning" onclick="copyBypassCode('${code.code}')">
-                        Copy
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="revokeBypassCode('${code.id}')">
-                        Revoke
-                    </button>
-                </div>
-            `;
-            container.appendChild(card);
-        });
-    }
-    
-    // Update settings
-    function updateSettings() {
-        const data = getSharedData();
-        const settings = data.awareSettings || {};
-        
-        document.getElementById('globalBlocks').value = settings.globalBlocks ? settings.globalBlocks.join('\n') : '';
-        document.getElementById('monitoringStart').value = settings.monitoringHours ? settings.monitoringHours.start : '08:00';
-        document.getElementById('monitoringEnd').value = settings.monitoringHours ? settings.monitoringHours.end : '16:00';
-        document.getElementById('enableScreenshots').checked = settings.enableScreenshots !== false;
-        document.getElementById('enableActivityLogging').checked = settings.enableActivityLogging !== false;
-        document.getElementById('enableMessaging').checked = settings.enableMessaging !== false;
-        document.getElementById('requireParentApproval').checked = settings.requireParentApproval === true;
-    }
-    
-    // Update activity view
-    function updateActivity() {
-        const data = getSharedData();
-        const activities = getAllActivities(data).sort((a, b) => b.timestamp - a.timestamp);
-        
-        const container = document.getElementById('fullActivityTimeline');
-        container.innerHTML = '';
-        
-        activities.forEach(activity => {
-            const item = document.createElement('div');
-            item.className = 'timeline-item';
-            
-            let icon = '📊';
-            if (activity.action && activity.action.includes('Visited')) icon = '🌐';
-            else if (activity.action && activity.action.includes('Message')) icon = '💬';
-            else if (activity.action && activity.action.includes('Blocked')) icon = '🚫';
-            else if (activity.action && activity.action.includes('connected')) icon = '🔐';
-            
-            item.innerHTML = `
-                <div class="timeline-icon">${icon}</div>
-                <div class="timeline-content">
-                    <div class="timeline-title">${activity.action || 'Activity'}</div>
-                    <div class="timeline-desc">${getStudentNameById(activity.studentId) || 'Unknown student'}</div>
-                    <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">
-                        Class: ${getClassName(activity.classCode) || 'Unknown'}
-                    </div>
-                </div>
-                <div class="timeline-time">${formatTime(activity.timestamp)}</div>
-            `;
-            container.appendChild(item);
-        });
-    }
-    
-    // Get student name by ID
-    function getStudentNameById(studentId) {
-        const data = getSharedData();
-        const student = data.students && data.students[studentId];
-        return student ? student.name : null;
-    }
-    
-    // Start monitoring
-    function startMonitoring() {
-        // Clear any existing interval
-        if (monitoringInterval) {
-            clearInterval(monitoringInterval);
+            // Update active classes
+            updateActiveClasses();
         }
         
-        // Update dashboard every 3 seconds
-        monitoringInterval = setInterval(() => {
+        // Get count of active students (online in last 30 seconds)
+        function getActiveStudentsCount(data) {
+            const now = Date.now();
+            return Object.values(data.students || {}).filter(s => 
+                s.lastActive && (now - s.lastActive) < 30000
+            ).length;
+        }
+        
+        // Get count of blocked attempts
+        function getBlockedAttemptsCount(data) {
+            let count = 0;
+            Object.values(data.activityLogs || {}).forEach(logs => {
+                if (Array.isArray(logs)) {
+                    logs.forEach(log => {
+                        if (log.action && log.action.includes('Blocked')) {
+                            count++;
+                        }
+                    });
+                }
+            });
+            return count;
+        }
+        
+        // Update recent activity
+        function updateRecentActivity() {
+            const data = getSharedData();
+            const activities = getAllActivities(data).sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+            
+            const container = document.getElementById('recentActivity');
+            container.innerHTML = '';
+            
+            activities.forEach(activity => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                
+                let icon = '📊';
+                if (activity.action && activity.action.includes('Visited')) icon = '🌐';
+                else if (activity.action && activity.action.includes('Message')) icon = '💬';
+                else if (activity.action && activity.action.includes('Blocked')) icon = '🚫';
+                
+                item.innerHTML = `
+                    <div class="timeline-icon">${icon}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${activity.action || 'Activity'}</div>
+                        <div class="timeline-desc">${getStudentNameById(activity.studentId) || ''}</div>
+                    </div>
+                    <div class="timeline-time">${formatTime(activity.timestamp)}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        // Get all activities from all students
+        function getAllActivities(data) {
+            const allActivities = [];
+            Object.entries(data.activityLogs || {}).forEach(([studentId, logs]) => {
+                if (Array.isArray(logs)) {
+                    logs.forEach(log => {
+                        allActivities.push({
+                            ...log,
+                            studentId: studentId
+                        });
+                    });
+                }
+            });
+            return allActivities;
+        }
+        
+        // Update top websites
+        function updateTopWebsites() {
+            const data = getSharedData();
+            const websiteCounts = {};
+            
+            getAllActivities(data).forEach(activity => {
+                if (activity.action && activity.action.includes('Visited')) {
+                    const match = activity.action.match(/Visited.*\((https?:\/\/[^)]+)\)/);
+                    if (match) {
+                        const url = match[1];
+                        const domain = url.replace('https://', '').replace('http://', '').split('/')[0];
+                        websiteCounts[domain] = (websiteCounts[domain] || 0) + 1;
+                    }
+                }
+            });
+            
+            const topWebsites = Object.entries(websiteCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            const container = document.getElementById('topWebsites');
+            container.innerHTML = '';
+            
+            topWebsites.forEach(([website, count]) => {
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-icon">🌐</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${website}</div>
+                        <div class="timeline-desc">Visited ${count} times</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        // Update active classes
+        function updateActiveClasses() {
+            const data = getSharedData();
+            const activeClasses = Object.values(data.classes || {}).filter(c => c.active !== false).slice(0, 3);
+            
+            const container = document.getElementById('activeClasses');
+            container.innerHTML = '';
+            
+            activeClasses.forEach(cls => {
+                const studentCount = Object.values(data.students || {}).filter(s => s.classCode === cls.id).length;
+                const div = document.createElement('div');
+                div.className = 'timeline-item';
+                div.innerHTML = `
+                    <div class="timeline-icon">👨‍🏫</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${cls.name || cls.id}</div>
+                        <div class="timeline-desc">${studentCount || 0} students • ${cls.teacher || 'No teacher'}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        // Get student name by ID
+        function getStudentNameById(studentId) {
+            const data = getSharedData();
+            const student = data.students && data.students[studentId];
+            return student ? student.name : null;
+        }
+        
+        // Update monitoring view
+        function updateMonitoring() {
+            const data = getSharedData();
+            
+            // Update class filter
+            const classFilter = document.getElementById('classFilter');
+            classFilter.innerHTML = '<option value="">All Classes</option>';
+            
+            Object.values(data.classes || {}).forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.id;
+                option.textContent = cls.name || cls.id;
+                classFilter.appendChild(option);
+            });
+            
+            // Update students
+            updateMonitoringStudents();
+        }
+        
+        // Update monitoring students
+        function updateMonitoringStudents() {
+            const data = getSharedData();
+            const classFilter = document.getElementById('classFilter').value;
+            
+            let students = Object.values(data.students || {});
+            
+            // Filter by class if selected
+            if (classFilter) {
+                students = students.filter(s => s.classCode === classFilter);
+            }
+            
+            // Filter by current user's school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                students = students.filter(s => {
+                    // Check if student belongs to a class in this school
+                    const studentClass = data.classes && data.classes[s.classCode];
+                    return studentClass && studentClass.schoolId === currentUser.schoolId;
+                });
+            }
+            
+            const container = document.getElementById('monitoringStudents');
+            container.innerHTML = '';
+            
+            students.forEach(student => {
+                const isActive = student.lastActive && (Date.now() - student.lastActive) < 30000;
+                const isLocked = data.studentLocks && data.studentLocks[student.id];
+                
+                // Get current tab info
+                const currentTab = student.tabs && student.tabs[student.activeTab || 0];
+                const activity = currentTab ? currentTab.title || currentTab.url : 'No activity';
+                
+                const card = document.createElement('div');
+                card.className = 'class-card';
+                card.style.cursor = 'pointer';
+                card.onclick = () => showStudentDetail(student.id);
+                
+                card.innerHTML = `
+                    <div class="class-header">
+                        <div class="class-name">${student.name || 'Unknown Student'}</div>
+                        <div class="status-indicator ${isLocked ? 'status-locked' : (isActive ? 'status-active' : 'status-inactive')}">
+                            ${isLocked ? '🔒 Locked' : (isActive ? '● Active' : '○ Inactive')}
+                        </div>
+                    </div>
+                    <div class="class-info">
+                        <div>Class: ${getClassName(student.classCode) || 'Unknown'}</div>
+                        <div>Activity: ${activity}</div>
+                        <div>Last seen: ${student.lastActive ? formatTime(student.lastActive) : 'Never'}</div>
+                    </div>
+                    <div class="class-actions">
+                        <button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); requestScreenshot('${student.id}')">
+                            <span>📸</span> Screenshot
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); lockStudent('${student.id}')">
+                            <span>🔒</span> Lock
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="event.stopPropagation(); unlockStudent('${student.id}')">
+                            <span>🔓</span> Unlock
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Get class name by ID
+        function getClassName(classId) {
+            const data = getSharedData();
+            const cls = data.classes && data.classes[classId];
+            return cls ? cls.name : classId;
+        }
+        
+        // Filter students by class
+        function filterStudentsByClass() {
+            updateMonitoringStudents();
+        }
+        
+        // Update students view
+        function updateStudents() {
+            const data = getSharedData();
+            let students = Object.values(data.students || {});
+            
+            // Filter by current user's school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                students = students.filter(s => {
+                    const studentClass = data.classes && data.classes[s.classCode];
+                    return studentClass && studentClass.schoolId === currentUser.schoolId;
+                });
+            }
+            
+            const container = document.getElementById('studentsTableContainer');
+            let html = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa; border-bottom: 2px solid #e1e5ee;">
+                            <th style="padding: 12px; text-align: left;">Name</th>
+                            <th style="padding: 12px; text-align: left;">Class</th>
+                            <th style="padding: 12px; text-align: left;">Status</th>
+                            <th style="padding: 12px; text-align: left;">Last Activity</th>
+                            <th style="padding: 12px; text-align: left;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            students.forEach(student => {
+                const isActive = student.lastActive && (Date.now() - student.lastActive) < 30000;
+                const isLocked = data.studentLocks && data.studentLocks[student.id];
+                
+                // Get current tab info
+                const currentTab = student.tabs && student.tabs[student.activeTab || 0];
+                const activity = currentTab ? currentTab.title || currentTab.url : 'No activity';
+                
+                html += `
+                    <tr style="border-bottom: 1px solid #e1e5ee;">
+                        <td style="padding: 12px;">${student.name || 'Unknown'}</td>
+                        <td style="padding: 12px;">${getClassName(student.classCode) || 'Unknown'}</td>
+                        <td style="padding: 12px;">
+                            <span class="status-indicator ${isLocked ? 'status-locked' : (isActive ? 'status-active' : 'status-inactive')}">
+                                ${isLocked ? 'Locked' : (isActive ? 'Active' : 'Inactive')}
+                            </span>
+                        </td>
+                        <td style="padding: 12px;">${activity}</td>
+                        <td style="padding: 12px;">
+                            <button class="btn btn-sm btn-primary" onclick="showStudentDetail('${student.id}')">View</button>
+                            <button class="btn btn-sm btn-warning" onclick="editStudent('${student.id}')">Edit</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteStudent('${student.id}')">Remove</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        // Update classes view
+        function updateClasses() {
+            updateClassSection();
+        }
+        
+        // Show class section
+        function showClassSection(section) {
+            currentClassSection = section;
+            
+            // Update tabs
+            document.querySelectorAll('.section-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.section-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            document.getElementById(section + 'Section').classList.add('active');
+            
+            // Find and activate tab
+            const tabs = document.querySelectorAll('.section-tab');
+            for (let i = 0; i < tabs.length; i++) {
+                if (tabs[i].textContent.includes(section.charAt(0).toUpperCase() + section.slice(1))) {
+                    tabs[i].classList.add('active');
+                    break;
+                }
+            }
+            
+            updateClassSection();
+        }
+        
+        // Update class section
+        function updateClassSection() {
+            switch(currentClassSection) {
+                case 'classes':
+                    updateClassesGrid();
+                    break;
+                case 'schedules':
+                    updateSchedulesGrid();
+                    break;
+                case 'bypass':
+                    updateBypassCodesGrid();
+                    break;
+                case 'settings':
+                    updateClassSettings();
+                    break;
+            }
+        }
+        
+        // Update classes grid
+        function updateClassesGrid() {
+            const data = getSharedData();
+            let classes = Object.values(data.classes || {});
+            
+            // Filter by current user's school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                classes = classes.filter(c => c.schoolId === currentUser.schoolId);
+            }
+            
+            const container = document.getElementById('classesGrid');
+            container.innerHTML = '';
+            
+            classes.forEach(cls => {
+                const studentCount = Object.values(data.students || {}).filter(s => s.classCode === cls.id).length;
+                const scheduleCount = Object.values(data.schedules || {}).filter(s => s.classId === cls.id).length;
+                
+                const card = document.createElement('div');
+                card.className = 'class-card';
+                
+                card.innerHTML = `
+                    <div class="class-header">
+                        <div class="class-name">${cls.name || cls.id}</div>
+                        <div class="class-code">${cls.subject || 'No subject'}</div>
+                    </div>
+                    <div class="class-info">
+                        <div>Grade: ${cls.grade || 'Not specified'}</div>
+                        <div>Teacher: ${cls.teacher || 'Not assigned'}</div>
+                        <div>Blocked sites: ${cls.blockedSites ? cls.blockedSites.length : 0}</div>
+                    </div>
+                    <div class="class-stats">
+                        <div class="class-stat">
+                            <div class="class-stat-value">${studentCount}</div>
+                            <div class="class-stat-label">Students</div>
+                        </div>
+                        <div class="class-stat">
+                            <div class="class-stat-value">${scheduleCount}</div>
+                            <div class="class-stat-label">Schedules</div>
+                        </div>
+                        <div class="class-stat">
+                            <div class="class-stat-value">${cls.active === false ? 'Inactive' : 'Active'}</div>
+                            <div class="class-stat-label">Status</div>
+                        </div>
+                    </div>
+                    <div class="class-actions">
+                        <button class="btn btn-sm btn-primary" onclick="viewClassDetails('${cls.id}')">
+                            <span>👁️</span> View
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="editClass('${cls.id}')">
+                            <span>✏️</span> Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteClass('${cls.id}')">
+                            <span>🗑️</span> Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Update schedules grid
+        function updateSchedulesGrid() {
+            const data = getSharedData();
+            let schedules = Object.values(data.schedules || {});
+            
+            // Filter by current user's school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                schedules = schedules.filter(schedule => {
+                    const cls = data.classes && data.classes[schedule.classId];
+                    return cls && cls.schoolId === currentUser.schoolId;
+                });
+            }
+            
+            const container = document.getElementById('schedulesGrid');
+            container.innerHTML = '';
+            
+            schedules.forEach(schedule => {
+                const cls = data.classes && data.classes[schedule.classId];
+                const card = document.createElement('div');
+                card.className = 'schedule-card';
+                card.onclick = () => viewScheduleDetails(schedule.id);
+                
+                const days = schedule.days || [];
+                const dayNames = { mon: 'M', tue: 'T', wed: 'W', thu: 'T', fri: 'F', sat: 'S', sun: 'S' };
+                
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="margin: 0;">${cls ? cls.name : schedule.classId}</h4>
+                        <span class="status-indicator ${schedule.active === false ? 'status-inactive' : 'status-active'}">
+                            ${schedule.active === false ? 'Inactive' : 'Active'}
+                        </span>
+                    </div>
+                    <div class="schedule-days">
+                        ${Object.entries(dayNames).map(([day, letter]) => `
+                            <div class="schedule-day ${days.includes(day) ? 'active' : ''}">${letter}</div>
+                        `).join('')}
+                    </div>
+                    <div class="schedule-time">${schedule.startTime || '09:00'} - ${schedule.endTime || '10:00'}</div>
+                    <div style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                        Type: ${schedule.type || 'monitoring'}
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-sm btn-warning" onclick="event.stopPropagation(); editSchedule('${schedule.id}')">
+                            Edit
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); deleteSchedule('${schedule.id}')">
+                            Delete
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Update bypass codes grid
+        function updateBypassCodesGrid() {
+            const data = getSharedData();
+            let bypassCodes = Object.values(data.bypassCodes || {});
+            
+            // Filter by current user's school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                bypassCodes = bypassCodes.filter(code => code.schoolId === currentUser.schoolId);
+            }
+            
+            const container = document.getElementById('bypassCodesGrid');
+            container.innerHTML = '';
+            
+            bypassCodes.forEach(code => {
+                const card = document.createElement('div');
+                card.className = 'bypass-card';
+                
+                let typeLabel = code.type || 'Student';
+                if (code.type === 'parent') typeLabel = 'Parent';
+                else if (code.type === 'emergency') typeLabel = 'Emergency';
+                else if (code.type === 'teacher') typeLabel = 'Teacher';
+                
+                const used = code.usageCount || 0;
+                const limit = code.maxUsage || 0;
+                const remaining = limit === 0 ? 'Unlimited' : limit - used;
+                const isExpired = code.expiry && Date.now() > code.expiry;
+                
+                card.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0;">${typeLabel} Code</h4>
+                        <span class="status-indicator ${isExpired ? 'status-inactive' : 'status-active'}">
+                            ${isExpired ? 'Expired' : 'Active'}
+                        </span>
+                    </div>
+                    <div class="bypass-code">${code.code}</div>
+                    <div style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
+                        ${code.notes || 'No description'}
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+                        <div>Used: ${used}/${limit === 0 ? '∞' : limit}</div>
+                        <div>Expires: ${code.expiry ? formatDate(code.expiry) : 'Never'}</div>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-sm btn-warning" onclick="copyBypassCode('${code.code}')">
+                            Copy
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="revokeBypassCode('${code.id}')">
+                            Revoke
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Update class settings
+        function updateClassSettings() {
+            const container = document.getElementById('classSettingsContent');
+            
+            if (currentUser.role === 'school') {
+                // School admin can set school-wide blocks
+                container.innerHTML = `
+                    <div class="settings-section">
+                        <div class="settings-section-title">School-Wide Website Restrictions</div>
+                        <p style="color: #666; margin-bottom: 15px;">These restrictions apply to ALL students in your school</p>
+                        <div class="form-group">
+                            <label for="schoolWideBlocks">Blocked Websites (one per line)</label>
+                            <textarea id="schoolWideBlocks" rows="6" placeholder="Enter websites to block for all students" class="form-control"></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="saveSchoolWideBlocks()">
+                            <span>💾</span> Save School-Wide Blocks
+                        </button>
+                    </div>
+                `;
+                
+                // Load existing school-wide blocks
+                const data = getSharedData();
+                const schoolSettings = data.schoolSettings && data.schoolSettings[currentUser.id];
+                if (schoolSettings && schoolSettings.blockedSites) {
+                    document.getElementById('schoolWideBlocks').value = schoolSettings.blockedSites.join('\n');
+                }
+            } else {
+                // Teacher can set blocks for their classes
+                container.innerHTML = `
+                    <div class="settings-section">
+                        <div class="settings-section-title">Class-Specific Website Restrictions</div>
+                        <p style="color: #666; margin-bottom: 15px;">Select a class to manage its blocked websites</p>
+                        <div class="form-group">
+                            <label for="teacherClassSelect">Select Class</label>
+                            <select id="teacherClassSelect" class="form-control" onchange="loadClassBlocks()">
+                                <option value="">Select a class</option>
+                            </select>
+                        </div>
+                        <div id="classBlocksContainer" style="display: none;">
+                            <div class="form-group">
+                                <label for="classSpecificBlocks">Blocked Websites for this Class (one per line)</label>
+                                <textarea id="classSpecificBlocks" rows="6" placeholder="Enter websites to block for this class" class="form-control"></textarea>
+                            </div>
+                            <button class="btn btn-primary" onclick="saveClassBlocks()">
+                                <span>💾</span> Save Class Blocks
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Populate teacher's classes
+                const data = getSharedData();
+                const classSelect = document.getElementById('teacherClassSelect');
+                classSelect.innerHTML = '<option value="">Select a class</option>';
+                
+                Object.values(data.classes || {}).forEach(cls => {
+                    if (cls.schoolId === currentUser.schoolId) {
+                        const option = document.createElement('option');
+                        option.value = cls.id;
+                        option.textContent = cls.name || cls.id;
+                        classSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+        
+        // Load class blocks for editing
+        function loadClassBlocks() {
+            const classId = document.getElementById('teacherClassSelect').value;
+            if (!classId) {
+                document.getElementById('classBlocksContainer').style.display = 'none';
+                return;
+            }
+            
+            const data = getSharedData();
+            const cls = data.classes && data.classes[classId];
+            
+            if (cls) {
+                document.getElementById('classSpecificBlocks').value = cls.blockedSites ? cls.blockedSites.join('\n') : '';
+                document.getElementById('classBlocksContainer').style.display = 'block';
+            }
+        }
+        
+        // Save class blocks
+        function saveClassBlocks() {
+            const classId = document.getElementById('teacherClassSelect').value;
+            const blocksText = document.getElementById('classSpecificBlocks').value;
+            
+            if (!classId) {
+                showError('Please select a class');
+                return;
+            }
+            
+            const data = getSharedData();
+            const cls = data.classes && data.classes[classId];
+            
+            if (cls) {
+                const blockedSites = blocksText.split('\n')
+                    .map(site => site.trim())
+                    .filter(site => site.length > 0);
+                
+                cls.blockedSites = blockedSites;
+                saveSharedData(data);
+                showSuccess('Class blocks saved successfully');
+            }
+        }
+        
+        // Save school-wide blocks
+        function saveSchoolWideBlocks() {
+            const blocksText = document.getElementById('schoolWideBlocks').value;
+            const blockedSites = blocksText.split('\n')
+                .map(site => site.trim())
+                .filter(site => site.length > 0);
+            
+            const data = getSharedData();
+            
+            if (!data.schoolSettings[currentUser.id]) {
+                data.schoolSettings[currentUser.id] = {};
+            }
+            
+            data.schoolSettings[currentUser.id].blockedSites = blockedSites;
+            saveSharedData(data);
+            showSuccess('School-wide blocks saved successfully');
+        }
+        
+        // Update teachers view (school admin only)
+        function updateTeachers() {
+            if (currentUser.role !== 'school') return;
+            
+            const data = getSharedData();
+            const teachers = Object.values(data.teachers || {}).filter(t => t.schoolId === currentUser.id);
+            
+            const container = document.getElementById('teachersGrid');
+            container.innerHTML = '';
+            
+            teachers.forEach(teacher => {
+                const card = document.createElement('div');
+                card.className = 'teacher-card';
+                
+                // Count classes for this teacher
+                const teacherClasses = Object.values(data.classes || {}).filter(c => 
+                    c.teacher && c.teacher.includes(teacher.name)
+                ).length;
+                
+                card.innerHTML = `
+                    <div class="teacher-avatar">${teacher.name.charAt(0).toUpperCase()}</div>
+                    <h3 style="text-align: center; margin-bottom: 10px;">${teacher.name}</h3>
+                    <div style="text-align: center; color: #666; margin-bottom: 15px;">
+                        <div>${teacher.email}</div>
+                        <div>Classes: ${teacherClasses}</div>
+                        <div>Joined: ${formatDate(teacher.created)}</div>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="btn btn-sm btn-primary" onclick="viewTeacherDetails('${teacher.id}')">
+                            View
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="removeTeacher('${teacher.id}')">
+                            Remove
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Update school settings
+        function updateSchoolSettings() {
+            if (currentUser.role !== 'school') return;
+            
+            const data = getSharedData();
+            
+            // Display school code
+            document.getElementById('schoolCodeDisplay').textContent = currentUser.schoolCode;
+            document.getElementById('inviteSchoolCode').textContent = currentUser.schoolCode;
+            
+            // Load school info
+            document.getElementById('schoolNameSettings').value = currentUser.name || '';
+            document.getElementById('schoolTypeSettings').value = currentUser.type || '';
+            
+            // Load aware settings
+            const settings = data.awareSettings || {};
+            document.getElementById('globalBlocks').value = settings.globalBlocks ? settings.globalBlocks.join('\n') : '';
+            document.getElementById('monitoringStart').value = settings.monitoringHours ? settings.monitoringHours.start : '08:00';
+            document.getElementById('monitoringEnd').value = settings.monitoringHours ? settings.monitoringHours.end : '16:00';
+            document.getElementById('enableScreenshots').checked = settings.enableScreenshots !== false;
+            document.getElementById('enableActivityLogging').checked = settings.enableActivityLogging !== false;
+            document.getElementById('enableMessaging').checked = settings.enableMessaging !== false;
+            document.getElementById('requireParentApproval').checked = settings.requireParentApproval === true;
+        }
+        
+        // Update activity view
+        function updateActivity() {
+            const data = getSharedData();
+            const activities = getAllActivities(data).sort((a, b) => b.timestamp - a.timestamp);
+            
+            const container = document.getElementById('fullActivityTimeline');
+            container.innerHTML = '';
+            
+            activities.forEach(activity => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                
+                let icon = '📊';
+                if (activity.action && activity.action.includes('Visited')) icon = '🌐';
+                else if (activity.action && activity.action.includes('Message')) icon = '💬';
+                else if (activity.action && activity.action.includes('Blocked')) icon = '🚫';
+                else if (activity.action && activity.action.includes('connected')) icon = '🔐';
+                
+                item.innerHTML = `
+                    <div class="timeline-icon">${icon}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">${activity.action || 'Activity'}</div>
+                        <div class="timeline-desc">${getStudentNameById(activity.studentId) || 'Unknown student'}</div>
+                        <div style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                            Class: ${getClassName(activity.classCode) || 'Unknown'}
+                        </div>
+                    </div>
+                    <div class="timeline-time">${formatTime(activity.timestamp)}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        // Start monitoring
+        function startMonitoring() {
+            // Clear any existing interval
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+            
+            // Update dashboard every 3 seconds
+            monitoringInterval = setInterval(() => {
+                updateAwareDashboard();
+            }, 3000);
+            
             updateAwareDashboard();
-        }, 3000);
+        }
         
-        updateAwareDashboard();
-    }
-    
-    // Update aware dashboard
-    function updateAwareDashboard() {
-        if (currentView === 'overview') {
-            updateOverview();
-        } else if (currentView === 'monitoring') {
-            updateMonitoring();
-        } else if (currentView === 'students') {
+        // Update aware dashboard
+        function updateAwareDashboard() {
+            if (currentView === 'overview') {
+                updateOverview();
+            } else if (currentView === 'monitoring') {
+                updateMonitoring();
+            } else if (currentView === 'students') {
+                updateStudents();
+            } else if (currentView === 'classes') {
+                updateClasses();
+            } else if (currentView === 'teachers') {
+                updateTeachers();
+            } else if (currentView === 'schoolSettings') {
+                updateSchoolSettings();
+            } else if (currentView === 'activity') {
+                updateActivity();
+            }
+        }
+        
+        // Start class session
+        function startClassSession() {
+            showSuccess('Starting monitoring session...');
+            
+            // Log activity
+            logActivity('session_start', 'Monitoring session started', 'A new monitoring session has been initiated');
+        }
+        
+        // Take all screenshots
+        function takeAllScreenshots() {
+            const data = getSharedData();
+            let activeStudents = Object.values(data.students || {}).filter(s => 
+                s.lastActive && (Date.now() - s.lastActive) < 30000
+            );
+            
+            // Filter by school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                activeStudents = activeStudents.filter(s => {
+                    const studentClass = data.classes && data.classes[s.classCode];
+                    return studentClass && studentClass.schoolId === currentUser.schoolId;
+                });
+            }
+            
+            if (activeStudents.length === 0) {
+                alert('No active students to capture');
+                return;
+            }
+            
+            showSuccess(`Taking screenshots of ${activeStudents.length} students...`);
+            
+            // Request screenshots for all active students
+            activeStudents.forEach(student => {
+                if (!data.screenshots) data.screenshots = {};
+                data.screenshots[student.id] = {
+                    requested: true,
+                    timestamp: Date.now()
+                };
+            });
+            
+            saveSharedData(data);
+            logActivity('screenshot_bulk', 'Bulk screenshot capture', `Requested screenshots from ${activeStudents.length} students`);
+            
+            // Simulate delay
+            setTimeout(() => {
+                showSuccess('Screenshots captured successfully!');
+            }, 2000);
+        }
+        
+        // Lock all students
+        function lockAllStudents() {
+            const data = getSharedData();
+            let activeStudents = Object.values(data.students || {}).filter(s => 
+                s.lastActive && (Date.now() - s.lastActive) < 30000
+            );
+            
+            // Filter by school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                activeStudents = activeStudents.filter(s => {
+                    const studentClass = data.classes && data.classes[s.classCode];
+                    return studentClass && studentClass.schoolId === currentUser.schoolId;
+                });
+            }
+            
+            if (activeStudents.length === 0) {
+                alert('No active students to lock');
+                return;
+            }
+            
+            if (confirm(`Lock browsers for ${activeStudents.length} students?`)) {
+                activeStudents.forEach(student => {
+                    if (!data.studentLocks) data.studentLocks = {};
+                    data.studentLocks[student.id] = true;
+                });
+                
+                saveSharedData(data);
+                showSuccess(`Locked ${activeStudents.length} students' browsers`);
+                logActivity('lock_all', 'Locked all students', 'All student browsers have been locked');
+                updateAwareDashboard();
+            }
+        }
+        
+        // Unlock all students
+        function unlockAllStudents() {
+            const data = getSharedData();
+            let lockedStudents = Object.values(data.students || {}).filter(s => 
+                data.studentLocks && data.studentLocks[s.id]
+            );
+            
+            // Filter by school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                lockedStudents = lockedStudents.filter(s => {
+                    const studentClass = data.classes && data.classes[s.classCode];
+                    return studentClass && studentClass.schoolId === currentUser.schoolId;
+                });
+            }
+            
+            if (lockedStudents.length === 0) {
+                alert('No locked students to unlock');
+                return;
+            }
+            
+            lockedStudents.forEach(student => {
+                if (data.studentLocks) {
+                    delete data.studentLocks[student.id];
+                }
+            });
+            
+            saveSharedData(data);
+            showSuccess(`Unlocked ${lockedStudents.length} students' browsers`);
+            logActivity('unlock_all', 'Unlocked all students', 'All student browsers have been unlocked');
+            updateAwareDashboard();
+        }
+        
+        // Show add student modal
+        function showAddStudentModal() {
+            const data = getSharedData();
+            const classSelect = document.getElementById('awareStudentClassSelect');
+            classSelect.innerHTML = '';
+            
+            let classes = Object.values(data.classes || {});
+            
+            // Filter by school if teacher
+            if (currentUser.role === 'teacher' && currentUser.schoolId) {
+                classes = classes.filter(c => c.schoolId === currentUser.schoolId);
+            }
+            
+            classes.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.id;
+                option.textContent = cls.name || cls.id;
+                classSelect.appendChild(option);
+            });
+            
+            openModal('addStudentModal');
+        }
+        
+        // Add student to aware class
+        function addStudentToAwareClass() {
+            const firstName = document.getElementById('awareStudentFirstName').value;
+            const lastName = document.getElementById('awareStudentLastName').value;
+            const classId = document.getElementById('awareStudentClassSelect').value;
+            
+            if (!firstName || !lastName || !classId) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            const data = getSharedData();
+            const cls = data.classes && data.classes[classId];
+            
+            if (!cls) {
+                showError('Selected class not found');
+                return;
+            }
+            
+            const studentId = 'student_' + Date.now();
+            const studentName = `${firstName} ${lastName}`;
+            
+            data.students[studentId] = {
+                id: studentId,
+                name: studentName,
+                firstName: firstName,
+                lastName: lastName,
+                classCode: classId,
+                lastActive: null,
+                device: getDeviceInfo(),
+                connected: false,
+                tabs: [],
+                activeTab: 0
+            };
+            
+            saveSharedData(data);
+            
+            // Clear form
+            document.getElementById('awareStudentFirstName').value = '';
+            document.getElementById('awareStudentLastName').value = '';
+            
+            closeModal('addStudentModal');
+            showSuccess(`Student ${studentName} added to ${cls.name}`);
+            logActivity('student_add', `Student added`, `${studentName} was added to ${cls.name}`);
+            
             updateStudents();
-        } else if (currentView === 'classes') {
-            updateClasses();
-        } else if (currentView === 'activity') {
-            updateActivity();
-        }
-    }
-    
-    // Start class session
-    function startClassSession() {
-        showSuccess('Starting monitoring session...');
-        
-        // Log activity
-        logActivity('session_start', 'Monitoring session started', 'A new monitoring session has been initiated');
-    }
-    
-    // Take all screenshots
-    function takeAllScreenshots() {
-        const data = getSharedData();
-        const activeStudents = Object.values(data.students || {}).filter(s => 
-            s.lastActive && (Date.now() - s.lastActive) < 30000
-        );
-        
-        if (activeStudents.length === 0) {
-            alert('No active students to capture');
-            return;
         }
         
-        showSuccess(`Taking screenshots of ${activeStudents.length} students...`);
+        // Show create class modal
+        function showCreateClassModal() {
+            openModal('createClassModal');
+            
+            // If teacher, pre-fill teacher name
+            if (currentUser.role === 'teacher') {
+                document.getElementById('awareClassTeacher').value = currentUser.name;
+            }
+        }
         
-        // Request screenshots for all active students
-        activeStudents.forEach(student => {
+        // Create aware class
+        function createAwareClass() {
+            const className = document.getElementById('awareClassName').value;
+            const subject = document.getElementById('awareClassSubject').value;
+            const grade = document.getElementById('awareClassGrade').value;
+            const blockedSites = document.getElementById('awareClassBlocks').value;
+            const teacher = document.getElementById('awareClassTeacher').value;
+            
+            if (!className) {
+                showError('Class name is required');
+                return;
+            }
+            
+            const data = getSharedData();
+            const classId = 'class_' + Date.now();
+            
+            const classData = {
+                id: classId,
+                name: className,
+                subject: subject,
+                grade: grade,
+                teacher: teacher || (currentUser.role === 'teacher' ? currentUser.name : ''),
+                blockedSites: blockedSites.split('\n').filter(site => site.trim()),
+                active: true,
+                created: Date.now()
+            };
+            
+            // Add school ID if teacher or school admin
+            if (currentUser.role === 'teacher') {
+                classData.schoolId = currentUser.schoolId;
+            } else if (currentUser.role === 'school') {
+                classData.schoolId = currentUser.id;
+            }
+            
+            data.classes[classId] = classData;
+            
+            saveSharedData(data);
+            
+            // Clear form
+            document.getElementById('awareClassName').value = '';
+            document.getElementById('awareClassSubject').value = '';
+            document.getElementById('awareClassGrade').value = '';
+            document.getElementById('awareClassBlocks').value = '';
+            document.getElementById('awareClassTeacher').value = '';
+            
+            closeModal('createClassModal');
+            showSuccess(`Class "${className}" created successfully`);
+            logActivity('class_create', 'Class created', `Class "${className}" was created`);
+            
+            updateClassesGrid();
+        }
+        
+        // Show create bypass code modal
+        function showCreateBypassCodeModal() {
+            // Check if user is teacher (restricted)
+            if (currentUser.role === 'teacher') {
+                alert('This feature is only available to School Administrators');
+                return;
+            }
+            
+            const data = getSharedData();
+            
+            // Populate class select
+            const classSelect = document.getElementById('bypassClassSelect');
+            classSelect.innerHTML = '<option value="">Select Class</option>';
+            Object.values(data.classes || {}).forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.id;
+                option.textContent = cls.name || cls.id;
+                classSelect.appendChild(option);
+            });
+            
+            // Populate student select
+            const studentSelect = document.getElementById('bypassStudentSelect');
+            studentSelect.innerHTML = '<option value="">Select Student</option>';
+            Object.values(data.students || {}).forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = student.name;
+                studentSelect.appendChild(option);
+            });
+            
+            // Set up event listeners for code type
+            document.getElementById('bypassCodeFor').addEventListener('change', function() {
+                const value = this.value;
+                document.getElementById('bypassCodeClassSelect').style.display = value === 'class' ? 'block' : 'none';
+                document.getElementById('bypassCodeStudentSelect').style.display = value === 'student' ? 'block' : 'none';
+            });
+            
+            openModal('createBypassCodeModal');
+        }
+        
+        // Create bypass code
+        function createBypassCode() {
+            const type = document.getElementById('bypassCodeType').value;
+            const forType = document.getElementById('bypassCodeFor').value;
+            const classId = document.getElementById('bypassClassSelect').value;
+            const studentId = document.getElementById('bypassStudentSelect').value;
+            const expiry = document.getElementById('bypassExpiry').value;
+            const usageLimit = parseInt(document.getElementById('bypassUsageLimit').value) || 0;
+            const notes = document.getElementById('bypassNotes').value;
+            
+            // Generate code
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            for (let i = 0; i < 8; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            code = code.match(/.{1,4}/g).join('-');
+            
+            // Calculate expiry date
+            let expiryDate = null;
+            if (expiry !== 'never') {
+                const now = new Date();
+                if (expiry === '1h') now.setHours(now.getHours() + 1);
+                else if (expiry === '4h') now.setHours(now.getHours() + 4);
+                else if (expiry === '24h') now.setDate(now.getDate() + 1);
+                else if (expiry === '7d') now.setDate(now.getDate() + 7);
+                else if (expiry === '30d') now.setDate(now.getDate() + 30);
+                expiryDate = now.getTime();
+            }
+            
+            const data = getSharedData();
+            const bypassId = 'bypass_' + Date.now();
+            
+            const bypassData = {
+                id: bypassId,
+                code: code,
+                type: type,
+                forType: forType,
+                classId: classId || null,
+                studentId: studentId || null,
+                expiry: expiryDate,
+                maxUsage: usageLimit,
+                usageCount: 0,
+                active: true,
+                notes: notes,
+                created: Date.now(),
+                createdBy: currentUser.id
+            };
+            
+            // Add school ID if school admin
+            if (currentUser.role === 'school') {
+                bypassData.schoolId = currentUser.id;
+            }
+            
+            data.bypassCodes[bypassId] = bypassData;
+            
+            saveSharedData(data);
+            
+            closeModal('createBypassCodeModal');
+            showSuccess(`Bypass code created: ${code}`);
+            logActivity('bypass_create', 'Bypass code created', `Created ${type} bypass code: ${code}`);
+            
+            updateBypassCodesGrid();
+        }
+        
+        // Show create schedule modal
+        function showCreateScheduleModal() {
+            // Check if user is teacher (restricted)
+            if (currentUser.role === 'teacher') {
+                alert('This feature is only available to School Administrators');
+                return;
+            }
+            
+            const data = getSharedData();
+            const classSelect = document.getElementById('scheduleClassSelect');
+            classSelect.innerHTML = '<option value="">Select Class</option>';
+            
+            Object.values(data.classes || {}).forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.id;
+                option.textContent = cls.name || cls.id;
+                classSelect.appendChild(option);
+            });
+            
+            // Set default dates
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('scheduleStartDate').value = today;
+            
+            // Clear selected days
+            selectedDays = [];
+            document.querySelectorAll('.day-option').forEach(day => {
+                day.classList.remove('selected');
+            });
+            
+            openModal('createScheduleModal');
+        }
+        
+        // Toggle day selection
+        function toggleDaySelection(element) {
+            const day = element.getAttribute('data-day');
+            const index = selectedDays.indexOf(day);
+            
+            if (index === -1) {
+                selectedDays.push(day);
+                element.classList.add('selected');
+            } else {
+                selectedDays.splice(index, 1);
+                element.classList.remove('selected');
+            }
+            
+            document.getElementById('scheduleDays').value = selectedDays.join(',');
+        }
+        
+        // Create class schedule
+        function createClassSchedule() {
+            const classId = document.getElementById('scheduleClassSelect').value;
+            const startTime = document.getElementById('scheduleStartTime').value;
+            const endTime = document.getElementById('scheduleEndTime').value;
+            const type = document.getElementById('scheduleType').value;
+            const startDate = document.getElementById('scheduleStartDate').value;
+            const endDate = document.getElementById('scheduleEndDate').value;
+            const active = document.getElementById('scheduleActive').checked;
+            
+            if (!classId || !startTime || !endTime || selectedDays.length === 0) {
+                showError('Please fill in all required fields');
+                return;
+            }
+            
+            const data = getSharedData();
+            const scheduleId = 'schedule_' + Date.now();
+            
+            data.schedules[scheduleId] = {
+                id: scheduleId,
+                classId: classId,
+                days: selectedDays,
+                startTime: startTime,
+                endTime: endTime,
+                type: type,
+                startDate: startDate ? new Date(startDate).getTime() : null,
+                endDate: endDate ? new Date(endDate).getTime() : null,
+                active: active,
+                created: Date.now(),
+                createdBy: currentUser.id
+            };
+            
+            saveSharedData(data);
+            
+            closeModal('createScheduleModal');
+            showSuccess('Class schedule created successfully');
+            logActivity('schedule_create', 'Schedule created', 'Created a new class schedule');
+            
+            updateSchedulesGrid();
+        }
+        
+        // Save school settings
+        function saveSchoolSettings() {
+            if (currentUser.role !== 'school') return;
+            
+            const schoolName = document.getElementById('schoolNameSettings').value;
+            const schoolType = document.getElementById('schoolTypeSettings').value;
+            const globalBlocks = document.getElementById('globalBlocks').value.split('\n').filter(site => site.trim());
+            const monitoringStart = document.getElementById('monitoringStart').value;
+            const monitoringEnd = document.getElementById('monitoringEnd').value;
+            const enableScreenshots = document.getElementById('enableScreenshots').checked;
+            const enableActivityLogging = document.getElementById('enableActivityLogging').checked;
+            const enableMessaging = document.getElementById('enableMessaging').checked;
+            const requireParentApproval = document.getElementById('requireParentApproval').checked;
+            
+            const data = getSharedData();
+            
+            // Update school info
+            if (data.schools[currentUser.id]) {
+                data.schools[currentUser.id].name = schoolName;
+                data.schools[currentUser.id].type = schoolType;
+            }
+            
+            // Update aware settings
+            data.awareSettings = {
+                globalBlocks: globalBlocks,
+                monitoringHours: { start: monitoringStart, end: monitoringEnd },
+                enableScreenshots: enableScreenshots,
+                enableActivityLogging: enableActivityLogging,
+                enableMessaging: enableMessaging,
+                requireParentApproval: requireParentApproval
+            };
+            
+            saveSharedData(data);
+            
+            // Update current user
+            currentUser.name = schoolName;
+            currentUser.type = schoolType;
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            showSuccess('All settings saved successfully');
+            logActivity('settings_save', 'Settings updated', 'School settings were updated');
+        }
+        
+        // Show student detail
+        function showStudentDetail(studentId) {
+            const data = getSharedData();
+            const student = data.students[studentId];
+            
+            if (!student) {
+                showError('Student not found');
+                return;
+            }
+            
+            selectedStudent = studentId;
+            
+            const cls = data.classes && data.classes[student.classCode];
+            document.getElementById('studentDetailName').textContent = student.name;
+            document.getElementById('studentDetailClass').textContent = `Class: ${cls ? cls.name : 'Unknown'}`;
+            document.getElementById('studentDetailAvatar').textContent = student.name ? student.name.charAt(0).toUpperCase() : 'S';
+            
+            const isActive = student.lastActive && (Date.now() - student.lastActive) < 30000;
+            const isLocked = data.studentLocks && data.studentLocks[studentId];
+            
+            // Get current tab info
+            const currentTab = student.tabs && student.tabs[student.activeTab || 0];
+            const activity = currentTab ? currentTab.title || currentTab.url : 'No activity';
+            
+            document.getElementById('studentCurrentActivity').textContent = activity;
+            document.getElementById('studentCurrentStatus').textContent = isLocked ? 'Locked' : (isActive ? 'Online' : 'Offline');
+            
+            // Update activity list
+            const activities = (data.activityLogs && data.activityLogs[studentId]) || [];
+            const activityList = document.getElementById('studentActivityList');
+            activityList.innerHTML = '';
+            
+            activities.slice(-5).reverse().forEach(activity => {
+                const div = document.createElement('div');
+                div.style.padding = '8px';
+                div.style.borderBottom = '1px solid #eee';
+                div.innerHTML = `
+                    <div style="font-weight: 500;">${activity.action || 'Activity'}</div>
+                    <div style="font-size: 0.8rem; color: #666;">${formatTime(activity.timestamp)}</div>
+                `;
+                activityList.appendChild(div);
+            });
+            
+            openModal('studentDetailModal');
+        }
+        
+        // Send student message
+        function sendStudentMessage() {
+            if (!selectedStudent) return;
+            
+            const message = prompt('Enter message to send to student:');
+            if (message) {
+                const data = getSharedData();
+                
+                if (!data.messages) data.messages = {};
+                if (!data.messages[selectedStudent]) data.messages[selectedStudent] = [];
+                
+                data.messages[selectedStudent].push({
+                    text: message,
+                    from: currentUser.name || currentUser.adminName,
+                    timestamp: Date.now()
+                });
+                
+                saveSharedData(data);
+                showSuccess('Message sent to student');
+                logActivity('message_sent', 'Message sent', `Sent message to student: ${message}`, selectedStudent);
+            }
+        }
+        
+        // Lock student browser
+        function lockStudentBrowser() {
+            if (!selectedStudent) return;
+            lockStudent(selectedStudent);
+        }
+        
+        // Lock student
+        function lockStudent(studentId) {
+            const id = studentId || selectedStudent;
+            if (!id) return;
+            
+            const data = getSharedData();
+            
+            if (!data.studentLocks) data.studentLocks = {};
+            data.studentLocks[id] = true;
+            
+            saveSharedData(data);
+            
+            showSuccess(`Browser locked for student`);
+            logActivity('lock_student', 'Browser locked', `Locked browser for student`, id);
+            
+            updateAwareDashboard();
+        }
+        
+        // Unlock student browser
+        function unlockStudentBrowser() {
+            if (!selectedStudent) return;
+            unlockStudent(selectedStudent);
+        }
+        
+        // Unlock student
+        function unlockStudent(studentId) {
+            const id = studentId || selectedStudent;
+            if (!id) return;
+            
+            const data = getSharedData();
+            
+            if (data.studentLocks) {
+                delete data.studentLocks[id];
+            }
+            
+            saveSharedData(data);
+            
+            showSuccess(`Browser unlocked for student`);
+            logActivity('unlock_student', 'Browser unlocked', `Unlocked browser for student`, id);
+            
+            updateAwareDashboard();
+        }
+        
+        // Request screenshot
+        function requestScreenshot(studentId) {
+            const id = studentId || selectedStudent;
+            if (!id) return;
+            
+            const data = getSharedData();
+            
             if (!data.screenshots) data.screenshots = {};
-            data.screenshots[student.id] = {
+            data.screenshots[id] = {
                 requested: true,
                 timestamp: Date.now()
             };
-        });
-        
-        saveSharedData(data);
-        logActivity('screenshot_bulk', 'Bulk screenshot capture', `Requested screenshots from ${activeStudents.length} students`);
-        
-        // Simulate delay
-        setTimeout(() => {
-            showSuccess('Screenshots captured successfully!');
-        }, 2000);
-    }
-    
-    // Lock all students
-    function lockAllStudents() {
-        const data = getSharedData();
-        const activeStudents = Object.values(data.students || {}).filter(s => 
-            s.lastActive && (Date.now() - s.lastActive) < 30000
-        );
-        
-        if (activeStudents.length === 0) {
-            alert('No active students to lock');
-            return;
-        }
-        
-        if (confirm(`Lock browsers for ${activeStudents.length} students?`)) {
-            activeStudents.forEach(student => {
-                if (!data.studentLocks) data.studentLocks = {};
-                data.studentLocks[student.id] = true;
-            });
             
             saveSharedData(data);
-            showSuccess(`Locked ${activeStudents.length} students' browsers`);
-            logActivity('lock_all', 'Locked all students', 'All student browsers have been locked');
-            updateAwareDashboard();
-        }
-    }
-    
-    // Unlock all students
-    function unlockAllStudents() {
-        const data = getSharedData();
-        const lockedStudents = Object.values(data.students || {}).filter(s => 
-            data.studentLocks && data.studentLocks[s.id]
-        );
-        
-        if (lockedStudents.length === 0) {
-            alert('No locked students to unlock');
-            return;
+            
+            showSuccess(`Screenshot requested from student`);
+            logActivity('screenshot_request', 'Screenshot requested', `Requested screenshot from student`, id);
+            
+            // Simulate delay
+            setTimeout(() => {
+                showSuccess(`Screenshot received from student`);
+            }, 1500);
         }
         
-        lockedStudents.forEach(student => {
-            if (data.studentLocks) {
-                delete data.studentLocks[student.id];
-            }
-        });
-        
-        saveSharedData(data);
-        showSuccess(`Unlocked ${lockedStudents.length} students' browsers`);
-        logActivity('unlock_all', 'Unlocked all students', 'All student browsers have been unlocked');
-        updateAwareDashboard();
-    }
-    
-    // Show add student modal
-    function showAddStudentModal() {
-        const data = getSharedData();
-        const classSelect = document.getElementById('awareStudentClassSelect');
-        classSelect.innerHTML = '';
-        
-        Object.values(data.classes || {}).forEach(cls => {
-            const option = document.createElement('option');
-            option.value = cls.id;
-            option.textContent = cls.name || cls.id;
-            classSelect.appendChild(option);
-        });
-        
-        openModal('addStudentModal');
-    }
-    
-    // Add student to aware class
-    function addStudentToAwareClass() {
-        const firstName = document.getElementById('awareStudentFirstName').value;
-        const lastName = document.getElementById('awareStudentLastName').value;
-        const classId = document.getElementById('awareStudentClassSelect').value;
-        
-        if (!firstName || !lastName || !classId) {
-            showError('Please fill in all fields');
-            return;
+        // Filter activity
+        function filterActivity() {
+            // Implement activity filtering if needed
+            updateActivity();
         }
         
-        const data = getSharedData();
-        const cls = data.classes && data.classes[classId];
-        
-        if (!cls) {
-            showError('Selected class not found');
-            return;
-        }
-        
-        const studentId = 'student_' + Date.now();
-        const studentName = `${firstName} ${lastName}`;
-        
-        data.students[studentId] = {
-            id: studentId,
-            name: studentName,
-            firstName: firstName,
-            lastName: lastName,
-            classCode: classId,
-            lastActive: null,
-            device: getDeviceInfo(),
-            connected: false,
-            tabs: [],
-            activeTab: 0
-        };
-        
-        saveSharedData(data);
-        
-        // Clear form
-        document.getElementById('awareStudentFirstName').value = '';
-        document.getElementById('awareStudentLastName').value = '';
-        
-        closeModal('addStudentModal');
-        showSuccess(`Student ${studentName} added to ${cls.name}`);
-        logActivity('student_add', `Student added`, `${studentName} was added to ${cls.name}`);
-        
-        updateStudents();
-    }
-    
-    // Show create class modal
-    function showCreateClassModal() {
-        openModal('createClassModal');
-    }
-    
-    // Create aware class
-    function createAwareClass() {
-        const className = document.getElementById('awareClassName').value;
-        const subject = document.getElementById('awareClassSubject').value;
-        const grade = document.getElementById('awareClassGrade').value;
-        const blockedSites = document.getElementById('awareClassBlocks').value;
-        const teacher = document.getElementById('awareClassTeacher').value;
-        
-        if (!className) {
-            showError('Class name is required');
-            return;
-        }
-        
-        const data = getSharedData();
-        const classId = 'class_' + Date.now();
-        
-        data.classes[classId] = {
-            id: classId,
-            name: className,
-            subject: subject,
-            grade: grade,
-            teacher: teacher || (currentUser.role === 'teacher' ? currentUser.name : ''),
-            blockedSites: blockedSites.split('\n').filter(site => site.trim()),
-            active: true,
-            created: Date.now()
-        };
-        
-        saveSharedData(data);
-        
-        // Clear form
-        document.getElementById('awareClassName').value = '';
-        document.getElementById('awareClassSubject').value = '';
-        document.getElementById('awareClassGrade').value = '';
-        document.getElementById('awareClassBlocks').value = '';
-        document.getElementById('awareClassTeacher').value = '';
-        
-        closeModal('createClassModal');
-        showSuccess(`Class "${className}" created successfully`);
-        logActivity('class_create', 'Class created', `Class "${className}" was created`);
-        
-        updateClassesGrid();
-    }
-    
-    // Show create bypass code modal
-    function showCreateBypassCodeModal() {
-        // Check if user is teacher (restricted)
-        if (currentUser.role === 'teacher') {
-            alert('This feature is only available to School Administrators');
-            return;
-        }
-        
-        const data = getSharedData();
-        
-        // Populate class select
-        const classSelect = document.getElementById('bypassClassSelect');
-        classSelect.innerHTML = '<option value="">Select Class</option>';
-        Object.values(data.classes || {}).forEach(cls => {
-            const option = document.createElement('option');
-            option.value = cls.id;
-            option.textContent = cls.name || cls.id;
-            classSelect.appendChild(option);
-        });
-        
-        // Populate student select
-        const studentSelect = document.getElementById('bypassStudentSelect');
-        studentSelect.innerHTML = '<option value="">Select Student</option>';
-        Object.values(data.students || {}).forEach(student => {
-            const option = document.createElement('option');
-            option.value = student.id;
-            option.textContent = student.name;
-            studentSelect.appendChild(option);
-        });
-        
-        // Set up event listeners for code type
-        document.getElementById('bypassCodeFor').addEventListener('change', function() {
-            const value = this.value;
-            document.getElementById('bypassCodeClassSelect').style.display = value === 'class' ? 'block' : 'none';
-            document.getElementById('bypassCodeStudentSelect').style.display = value === 'student' ? 'block' : 'none';
-        });
-        
-        openModal('createBypassCodeModal');
-    }
-    
-    // Create bypass code
-    function createBypassCode() {
-        const type = document.getElementById('bypassCodeType').value;
-        const forType = document.getElementById('bypassCodeFor').value;
-        const classId = document.getElementById('bypassClassSelect').value;
-        const studentId = document.getElementById('bypassStudentSelect').value;
-        const expiry = document.getElementById('bypassExpiry').value;
-        const usageLimit = parseInt(document.getElementById('bypassUsageLimit').value) || 0;
-        const notes = document.getElementById('bypassNotes').value;
-        
-        // Generate code
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        let code = '';
-        for (let i = 0; i < 8; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        code = code.match(/.{1,4}/g).join('-');
-        
-        // Calculate expiry date
-        let expiryDate = null;
-        if (expiry !== 'never') {
-            const now = new Date();
-            if (expiry === '1h') now.setHours(now.getHours() + 1);
-            else if (expiry === '4h') now.setHours(now.getHours() + 4);
-            else if (expiry === '24h') now.setDate(now.getDate() + 1);
-            else if (expiry === '7d') now.setDate(now.getDate() + 7);
-            else if (expiry === '30d') now.setDate(now.getDate() + 30);
-            expiryDate = now.getTime();
-        }
-        
-        const data = getSharedData();
-        const bypassId = 'bypass_' + Date.now();
-        
-        data.bypassCodes[bypassId] = {
-            id: bypassId,
-            code: code,
-            type: type,
-            forType: forType,
-            classId: classId || null,
-            studentId: studentId || null,
-            expiry: expiryDate,
-            maxUsage: usageLimit,
-            usageCount: 0,
-            active: true,
-            notes: notes,
-            created: Date.now(),
-            createdBy: currentUser.id
-        };
-        
-        saveSharedData(data);
-        
-        closeModal('createBypassCodeModal');
-        showSuccess(`Bypass code created: ${code}`);
-        logActivity('bypass_create', 'Bypass code created', `Created ${type} bypass code: ${code}`);
-        
-        updateBypassCodesGrid();
-    }
-    
-    // Show create schedule modal
-    function showCreateScheduleModal() {
-        // Check if user is teacher (restricted)
-        if (currentUser.role === 'teacher') {
-            alert('This feature is only available to School Administrators');
-            return;
-        }
-        
-        const data = getSharedData();
-        const classSelect = document.getElementById('scheduleClassSelect');
-        classSelect.innerHTML = '<option value="">Select Class</option>';
-        
-        Object.values(data.classes || {}).forEach(cls => {
-            const option = document.createElement('option');
-            option.value = cls.id;
-            option.textContent = cls.name || cls.id;
-            classSelect.appendChild(option);
-        });
-        
-        // Set default dates
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('scheduleStartDate').value = today;
-        
-        // Clear selected days
-        selectedDays = [];
-        document.querySelectorAll('.day-option').forEach(day => {
-            day.classList.remove('selected');
-        });
-        
-        openModal('createScheduleModal');
-    }
-    
-    // Toggle day selection
-    function toggleDaySelection(element) {
-        const day = element.getAttribute('data-day');
-        const index = selectedDays.indexOf(day);
-        
-        if (index === -1) {
-            selectedDays.push(day);
-            element.classList.add('selected');
-        } else {
-            selectedDays.splice(index, 1);
-            element.classList.remove('selected');
-        }
-        
-        document.getElementById('scheduleDays').value = selectedDays.join(',');
-    }
-    
-    // Create class schedule
-    function createClassSchedule() {
-        const classId = document.getElementById('scheduleClassSelect').value;
-        const startTime = document.getElementById('scheduleStartTime').value;
-        const endTime = document.getElementById('scheduleEndTime').value;
-        const type = document.getElementById('scheduleType').value;
-        const startDate = document.getElementById('scheduleStartDate').value;
-        const endDate = document.getElementById('scheduleEndDate').value;
-        const active = document.getElementById('scheduleActive').checked;
-        
-        if (!classId || !startTime || !endTime || selectedDays.length === 0) {
-            showError('Please fill in all required fields');
-            return;
-        }
-        
-        const data = getSharedData();
-        const scheduleId = 'schedule_' + Date.now();
-        
-        data.schedules[scheduleId] = {
-            id: scheduleId,
-            classId: classId,
-            days: selectedDays,
-            startTime: startTime,
-            endTime: endTime,
-            type: type,
-            startDate: startDate ? new Date(startDate).getTime() : null,
-            endDate: endDate ? new Date(endDate).getTime() : null,
-            active: active,
-            created: Date.now(),
-            createdBy: currentUser.id
-        };
-        
-        saveSharedData(data);
-        
-        closeModal('createScheduleModal');
-        showSuccess('Class schedule created successfully');
-        logActivity('schedule_create', 'Schedule created', 'Created a new class schedule');
-        
-        updateSchedulesGrid();
-    }
-    
-    // Save school settings
-    function saveSchoolSettings() {
-        const globalBlocks = document.getElementById('globalBlocks').value.split('\n').filter(site => site.trim());
-        const monitoringStart = document.getElementById('monitoringStart').value;
-        const monitoringEnd = document.getElementById('monitoringEnd').value;
-        const enableScreenshots = document.getElementById('enableScreenshots').checked;
-        const enableActivityLogging = document.getElementById('enableActivityLogging').checked;
-        const enableMessaging = document.getElementById('enableMessaging').checked;
-        const requireParentApproval = document.getElementById('requireParentApproval').checked;
-        
-        const data = getSharedData();
-        
-        data.awareSettings = {
-            globalBlocks: globalBlocks,
-            monitoringHours: { start: monitoringStart, end: monitoringEnd },
-            enableScreenshots: enableScreenshots,
-            enableActivityLogging: enableActivityLogging,
-            enableMessaging: enableMessaging,
-            requireParentApproval: requireParentApproval
-        };
-        
-        saveSharedData(data);
-        showSuccess('Settings saved successfully');
-        logActivity('settings_save', 'Settings updated', 'Monitoring settings were updated');
-    }
-    
-    // Show student detail
-    function showStudentDetail(studentId) {
-        const data = getSharedData();
-        const student = data.students[studentId];
-        
-        if (!student) {
-            showError('Student not found');
-            return;
-        }
-        
-        selectedStudent = studentId;
-        
-        const cls = data.classes && data.classes[student.classCode];
-        document.getElementById('studentDetailName').textContent = student.name;
-        document.getElementById('studentDetailClass').textContent = `Class: ${cls ? cls.name : 'Unknown'}`;
-        document.getElementById('studentDetailAvatar').textContent = student.name ? student.name.charAt(0).toUpperCase() : 'S';
-        
-        const isActive = student.lastActive && (Date.now() - student.lastActive) < 30000;
-        const isLocked = data.studentLocks && data.studentLocks[studentId];
-        
-        // Get current tab info
-        const currentTab = student.tabs && student.tabs[student.activeTab || 0];
-        const activity = currentTab ? currentTab.title || currentTab.url : 'No activity';
-        
-        document.getElementById('studentCurrentActivity').textContent = activity;
-        document.getElementById('studentCurrentStatus').textContent = isLocked ? 'Locked' : (isActive ? 'Online' : 'Offline');
-        
-        // Update activity list
-        const activities = (data.activityLogs && data.activityLogs[studentId]) || [];
-        const activityList = document.getElementById('studentActivityList');
-        activityList.innerHTML = '';
-        
-        activities.slice(-5).reverse().forEach(activity => {
-            const div = document.createElement('div');
-            div.style.padding = '8px';
-            div.style.borderBottom = '1px solid #eee';
-            div.innerHTML = `
-                <div style="font-weight: 500;">${activity.action || 'Activity'}</div>
-                <div style="font-size: 0.8rem; color: #666;">${formatTime(activity.timestamp)}</div>
-            `;
-            activityList.appendChild(div);
-        });
-        
-        openModal('studentDetailModal');
-    }
-    
-    // Send student message
-    function sendStudentMessage() {
-        if (!selectedStudent) return;
-        
-        const message = prompt('Enter message to send to student:');
-        if (message) {
+        // Export activity
+        function exportActivity() {
             const data = getSharedData();
+            const activities = getAllActivities(data).sort((a, b) => b.timestamp - a.timestamp);
             
-            if (!data.messages) data.messages = {};
-            if (!data.messages[selectedStudent]) data.messages[selectedStudent] = [];
-            
-            data.messages[selectedStudent].push({
-                text: message,
-                from: currentUser.name || currentUser.adminName,
-                timestamp: Date.now()
+            let csv = 'Timestamp,Action,Student,Class\n';
+            activities.forEach(activity => {
+                csv += `${formatTime(activity.timestamp)},${activity.action || ''},${getStudentNameById(activity.studentId) || ''},${getClassName(activity.classCode) || ''}\n`;
             });
             
-            saveSharedData(data);
-            showSuccess('Message sent to student');
-            logActivity('message_sent', 'Message sent', `Sent message to student: ${message}`, selectedStudent);
-        }
-    }
-    
-    // Lock student browser
-    function lockStudent(studentId) {
-        const id = studentId || selectedStudent;
-        if (!id) return;
-        
-        const data = getSharedData();
-        
-        if (!data.studentLocks) data.studentLocks = {};
-        data.studentLocks[id] = true;
-        
-        saveSharedData(data);
-        
-        showSuccess(`Browser locked for student`);
-        logActivity('lock_student', 'Browser locked', `Locked browser for student`, id);
-        
-        updateAwareDashboard();
-    }
-    
-    // Unlock student browser
-    function unlockStudent(studentId) {
-        const id = studentId || selectedStudent;
-        if (!id) return;
-        
-        const data = getSharedData();
-        
-        if (data.studentLocks) {
-            delete data.studentLocks[id];
+            // Create download link
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `activity_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            
+            showSuccess('Activity data exported successfully');
         }
         
-        saveSharedData(data);
-        
-        showSuccess(`Browser unlocked for student`);
-        logActivity('unlock_student', 'Browser unlocked', `Unlocked browser for student`, id);
-        
-        updateAwareDashboard();
-    }
-    
-    // Request screenshot
-    function requestScreenshot(studentId) {
-        const id = studentId || selectedStudent;
-        if (!id) return;
-        
-        const data = getSharedData();
-        
-        if (!data.screenshots) data.screenshots = {};
-        data.screenshots[id] = {
-            requested: true,
-            timestamp: Date.now()
-        };
-        
-        saveSharedData(data);
-        
-        showSuccess(`Screenshot requested from student`);
-        logActivity('screenshot_request', 'Screenshot requested', `Requested screenshot from student`, id);
-        
-        // Simulate delay
-        setTimeout(() => {
-            showSuccess(`Screenshot received from student`);
-        }, 1500);
-    }
-    
-    // Filter activity
-    function filterActivity() {
-        const filter = document.getElementById('activityFilter').value;
-        // This would filter the activity view if implemented
-        updateActivity();
-    }
-    
-    // Export activity
-    function exportActivity() {
-        const data = getSharedData();
-        const activities = getAllActivities(data).sort((a, b) => b.timestamp - a.timestamp);
-        
-        let csv = 'Timestamp,Action,Student,Class\n';
-        activities.forEach(activity => {
-            csv += `${formatTime(activity.timestamp)},${activity.action || ''},${getStudentNameById(activity.studentId) || ''},${getClassName(activity.classCode) || ''}\n`;
-        });
-        
-        // Create download link
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `activity_export_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        showSuccess('Activity data exported successfully');
-    }
-    
-    // View class details
-    function viewClassDetails(classId) {
-        const data = getSharedData();
-        const cls = data.classes && data.classes[classId];
-        
-        if (cls) {
-            const students = Object.values(data.students || {}).filter(s => s.classCode === classId);
-            alert(`Class: ${cls.name}\nSubject: ${cls.subject || 'None'}\nGrade: ${cls.grade || 'None'}\nTeacher: ${cls.teacher || 'None'}\nStudents: ${students.length}\nBlocked Sites: ${cls.blockedSites ? cls.blockedSites.length : 0}`);
+        // View class details
+        function viewClassDetails(classId) {
+            const data = getSharedData();
+            const cls = data.classes && data.classes[classId];
+            
+            if (cls) {
+                const students = Object.values(data.students || {}).filter(s => s.classCode === classId);
+                alert(`Class: ${cls.name}\nSubject: ${cls.subject || 'None'}\nGrade: ${cls.grade || 'None'}\nTeacher: ${cls.teacher || 'None'}\nStudents: ${students.length}\nBlocked Sites: ${cls.blockedSites ? cls.blockedSites.length : 0}`);
+            }
         }
-    }
-    
-    // Edit class
-    function editClass(classId) {
-        const data = getSharedData();
-        const cls = data.classes && data.classes[classId];
         
-        if (cls) {
-            const newName = prompt('Enter new class name:', cls.name);
-            if (newName) {
-                cls.name = newName;
+        // Edit class
+        function editClass(classId) {
+            const data = getSharedData();
+            const cls = data.classes && data.classes[classId];
+            
+            if (cls) {
+                const newName = prompt('Enter new class name:', cls.name);
+                if (newName) {
+                    cls.name = newName;
+                    saveSharedData(data);
+                    showSuccess('Class updated successfully');
+                    updateClassesGrid();
+                }
+            }
+        }
+        
+        // Delete class
+        function deleteClass(classId) {
+            if (!confirm('Are you sure you want to delete this class? This will remove all associated students and schedules.')) {
+                return;
+            }
+            
+            const data = getSharedData();
+            const cls = data.classes && data.classes[classId];
+            
+            if (cls) {
+                // Remove class
+                delete data.classes[classId];
+                
+                // Remove students from this class
+                Object.keys(data.students || {}).forEach(studentId => {
+                    if (data.students[studentId].classCode === classId) {
+                        delete data.students[studentId];
+                    }
+                });
+                
+                // Remove schedules for this class
+                Object.keys(data.schedules || {}).forEach(scheduleId => {
+                    if (data.schedules[scheduleId].classId === classId) {
+                        delete data.schedules[scheduleId];
+                    }
+                });
+                
                 saveSharedData(data);
-                showSuccess('Class updated successfully');
+                showSuccess('Class deleted successfully');
+                logActivity('class_delete', 'Class deleted', `Deleted class: ${cls.name}`);
                 updateClassesGrid();
             }
         }
-    }
-    
-    // Delete class
-    function deleteClass(classId) {
-        if (!confirm('Are you sure you want to delete this class? This will remove all associated students and schedules.')) {
-            return;
+        
+        // View schedule details
+        function viewScheduleDetails(scheduleId) {
+            const data = getSharedData();
+            const schedule = data.schedules && data.schedules[scheduleId];
+            
+            if (schedule) {
+                const cls = data.classes && data.classes[schedule.classId];
+                const daysMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+                const days = schedule.days ? schedule.days.map(day => daysMap[day] || day).join(', ') : 'No days';
+                
+                let details = `
+                    <h3>${cls ? cls.name : schedule.classId}</h3>
+                    <p><strong>Days:</strong> ${days}</p>
+                    <p><strong>Time:</strong> ${schedule.startTime} - ${schedule.endTime}</p>
+                    <p><strong>Type:</strong> ${schedule.type || 'monitoring'}</p>
+                    <p><strong>Status:</strong> ${schedule.active === false ? 'Inactive' : 'Active'}</p>
+                `;
+                
+                if (schedule.startDate) {
+                    details += `<p><strong>Starts:</strong> ${formatDate(schedule.startDate)}</p>`;
+                }
+                
+                if (schedule.endDate) {
+                    details += `<p><strong>Ends:</strong> ${formatDate(schedule.endDate)}</p>`;
+                }
+                
+                document.getElementById('scheduleDetails').innerHTML = details;
+                openModal('viewScheduleModal');
+            }
         }
         
-        const data = getSharedData();
-        const cls = data.classes && data.classes[classId];
-        
-        if (cls) {
-            // Remove class
-            delete data.classes[classId];
-            
-            // Remove students from this class
-            Object.keys(data.students || {}).forEach(studentId => {
-                if (data.students[studentId].classCode === classId) {
-                    delete data.students[studentId];
-                }
-            });
-            
-            // Remove schedules for this class
-            Object.keys(data.schedules || {}).forEach(scheduleId => {
-                if (data.schedules[scheduleId].classId === classId) {
-                    delete data.schedules[scheduleId];
-                }
-            });
-            
-            saveSharedData(data);
-            showSuccess('Class deleted successfully');
-            logActivity('class_delete', 'Class deleted', `Deleted class: ${cls.name}`);
-            updateClassesGrid();
+        // Edit schedule
+        function editSchedule(scheduleId) {
+            alert('Edit schedule functionality would be implemented here');
         }
-    }
-    
-    // View schedule details
-    function viewScheduleDetails(scheduleId) {
-        const data = getSharedData();
-        const schedule = data.schedules && data.schedules[scheduleId];
         
-        if (schedule) {
-            const cls = data.classes && data.classes[schedule.classId];
-            const daysMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
-            const days = schedule.days ? schedule.days.map(day => daysMap[day] || day).join(', ') : 'No days';
-            
-            let details = `
-                <h3>${cls ? cls.name : schedule.classId}</h3>
-                <p><strong>Days:</strong> ${days}</p>
-                <p><strong>Time:</strong> ${schedule.startTime} - ${schedule.endTime}</p>
-                <p><strong>Type:</strong> ${schedule.type || 'monitoring'}</p>
-                <p><strong>Status:</strong> ${schedule.active === false ? 'Inactive' : 'Active'}</p>
-            `;
-            
-            if (schedule.startDate) {
-                details += `<p><strong>Starts:</strong> ${formatDate(schedule.startDate)}</p>`;
+        // Delete schedule
+        function deleteSchedule(scheduleId) {
+            if (!confirm('Are you sure you want to delete this schedule?')) {
+                return;
             }
             
-            if (schedule.endDate) {
-                details += `<p><strong>Ends:</strong> ${formatDate(schedule.endDate)}</p>`;
-            }
+            const data = getSharedData();
+            const schedule = data.schedules && data.schedules[scheduleId];
             
-            document.getElementById('scheduleDetails').innerHTML = details;
-            openModal('viewScheduleModal');
-        }
-    }
-    
-    // Edit schedule
-    function editSchedule(scheduleId) {
-        // Implementation for editing schedule
-        alert('Edit schedule functionality would be implemented here');
-    }
-    
-    // Delete schedule
-    function deleteSchedule(scheduleId) {
-        if (!confirm('Are you sure you want to delete this schedule?')) {
-            return;
-        }
-        
-        const data = getSharedData();
-        const schedule = data.schedules && data.schedules[scheduleId];
-        
-        if (schedule) {
-            delete data.schedules[scheduleId];
-            saveSharedData(data);
-            showSuccess('Schedule deleted successfully');
-            updateSchedulesGrid();
-        }
-    }
-    
-    // Copy bypass code
-    function copyBypassCode(code) {
-        navigator.clipboard.writeText(code).then(() => {
-            showSuccess('Code copied to clipboard!');
-        }).catch(err => {
-            console.error('Failed to copy: ', err);
-        });
-    }
-    
-    // Revoke bypass code
-    function revokeBypassCode(codeId) {
-        if (!confirm('Are you sure you want to revoke this bypass code?')) {
-            return;
-        }
-        
-        const data = getSharedData();
-        const code = data.bypassCodes && data.bypassCodes[codeId];
-        
-        if (code) {
-            code.active = false;
-            saveSharedData(data);
-            showSuccess('Bypass code revoked');
-            updateBypassCodesGrid();
-        }
-    }
-    
-    // Edit student
-    function editStudent(studentId) {
-        const data = getSharedData();
-        const student = data.students && data.students[studentId];
-        
-        if (student) {
-            const newName = prompt('Enter new student name:', student.name);
-            if (newName) {
-                student.name = newName;
+            if (schedule) {
+                delete data.schedules[scheduleId];
                 saveSharedData(data);
-                showSuccess('Student updated successfully');
+                showSuccess('Schedule deleted successfully');
+                updateSchedulesGrid();
+            }
+        }
+        
+        // Copy bypass code
+        function copyBypassCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                showSuccess('Code copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+        
+        // Copy school code
+        function copySchoolCode() {
+            navigator.clipboard.writeText(currentUser.schoolCode).then(() => {
+                showSuccess('School code copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+        
+        // Revoke bypass code
+        function revokeBypassCode(codeId) {
+            if (!confirm('Are you sure you want to revoke this bypass code?')) {
+                return;
+            }
+            
+            const data = getSharedData();
+            const code = data.bypassCodes && data.bypassCodes[codeId];
+            
+            if (code) {
+                code.active = false;
+                saveSharedData(data);
+                showSuccess('Bypass code revoked');
+                updateBypassCodesGrid();
+            }
+        }
+        
+        // Edit student
+        function editStudent(studentId) {
+            const data = getSharedData();
+            const student = data.students && data.students[studentId];
+            
+            if (student) {
+                const newName = prompt('Enter new student name:', student.name);
+                if (newName) {
+                    student.name = newName;
+                    saveSharedData(data);
+                    showSuccess('Student updated successfully');
+                    updateStudents();
+                }
+            }
+        }
+        
+        // Delete student
+        function deleteStudent(studentId) {
+            if (!confirm('Are you sure you want to remove this student?')) {
+                return;
+            }
+            
+            const data = getSharedData();
+            const student = data.students && data.students[studentId];
+            
+            if (student) {
+                delete data.students[studentId];
+                saveSharedData(data);
+                showSuccess('Student removed successfully');
+                logActivity('student_remove', 'Student removed', `Removed student: ${student.name}`);
                 updateStudents();
             }
         }
-    }
-    
-    // Delete student
-    function deleteStudent(studentId) {
-        if (!confirm('Are you sure you want to remove this student?')) {
-            return;
+        
+        // View teacher details
+        function viewTeacherDetails(teacherId) {
+            const data = getSharedData();
+            const teacher = data.teachers && data.teachers[teacherId];
+            
+            if (teacher) {
+                alert(`Teacher: ${teacher.name}\nEmail: ${teacher.email}\nSchool: ${teacher.schoolName}\nJoined: ${formatDate(teacher.created)}`);
+            }
         }
         
-        const data = getSharedData();
-        const student = data.students && data.students[studentId];
-        
-        if (student) {
-            delete data.students[studentId];
-            saveSharedData(data);
-            showSuccess('Student removed successfully');
-            logActivity('student_remove', 'Student removed', `Removed student: ${student.name}`);
-            updateStudents();
+        // Remove teacher
+        function removeTeacher(teacherId) {
+            if (!confirm('Are you sure you want to remove this teacher? They will lose access to the school.')) {
+                return;
+            }
+            
+            const data = getSharedData();
+            const teacher = data.teachers && data.teachers[teacherId];
+            
+            if (teacher) {
+                delete data.teachers[teacherId];
+                saveSharedData(data);
+                showSuccess('Teacher removed successfully');
+                updateTeachers();
+            }
         }
-    }
-    
-    // Open modal
-    function openModal(modalId) {
-        document.getElementById(modalId).style.display = 'flex';
-    }
-    
-    // Close modal
-    function closeModal(modalId) {
-        document.getElementById(modalId).style.display = 'none';
-    }
-    
-    // Open ClassStacks Dashboard (main dashboard)
-    function openClassStacksDashboard() {
-        // Both teachers and school admins can access the main dashboard
-        window.open('classstacks.html', '_blank');
-    }
-    
-    // Log activity
-    function logActivity(action, title, description, studentId = null) {
-        const data = getSharedData();
         
-        if (!data.activityLogs) data.activityLogs = {};
+        // Invite teacher modal
+        function inviteTeacherModal() {
+            openModal('inviteTeacherModal');
+        }
         
-        // If studentId provided, add to student's logs
-        if (studentId) {
-            if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
-            data.activityLogs[studentId].push({
+        // Send teacher invite
+        function sendTeacherInvite() {
+            const email = document.getElementById('inviteTeacherEmail').value;
+            const name = document.getElementById('inviteTeacherName').value;
+            
+            if (!email || !name) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            // In a real application, you would send an email here
+            // For now, just show success message
+            showSuccess(`Invitation sent to ${name} (${email}) with school code: ${currentUser.schoolCode}`);
+            closeModal('inviteTeacherModal');
+        }
+        
+        // Open modal
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Open ClassStacks Dashboard (main dashboard)
+        function openClassStacksDashboard() {
+            window.open('classstacks.html', '_blank');
+        }
+        
+        // Log activity
+        function logActivity(action, title, description, studentId = null) {
+            const data = getSharedData();
+            
+            if (!data.activityLogs) data.activityLogs = {};
+            
+            // If studentId provided, add to student's logs
+            if (studentId) {
+                if (!data.activityLogs[studentId]) data.activityLogs[studentId] = [];
+                data.activityLogs[studentId].push({
+                    action: action,
+                    timestamp: Date.now(),
+                    description: description
+                });
+            }
+            
+            // Also log in aware activity
+            if (!data.awareLogs) data.awareLogs = [];
+            data.awareLogs.push({
                 action: action,
+                title: title,
+                description: description,
                 timestamp: Date.now(),
-                description: description
+                userId: currentUser.id,
+                userName: currentUser.name || currentUser.adminName
             });
+            
+            saveSharedData(data);
         }
         
-        // Also log in aware activity
-        if (!data.awareLogs) data.awareLogs = [];
-        data.awareLogs.push({
-            action: action,
-            title: title,
-            description: description,
-            timestamp: Date.now(),
-            userId: currentUser.id,
-            userName: currentUser.name || currentUser.adminName
-        });
+        // Format time
+        function formatTime(timestamp) {
+            if (!timestamp) return 'Never';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
         
-        saveSharedData(data);
-    }
-    
-    // Format time
-    function formatTime(timestamp) {
-        if (!timestamp) return 'Never';
-        const date = new Date(timestamp);
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    }
-    
-    // Format date
-    function formatDate(timestamp) {
-        if (!timestamp) return 'Never';
-        const date = new Date(timestamp);
-        return date.toLocaleDateString();
-    }
-    
-    // Get device info
-    function getDeviceInfo() {
-        const ua = navigator.userAgent;
-        if (/Mobile|Android|iPhone|iPad|iPod/.test(ua)) return 'Mobile';
-        else if (/Tablet|iPad/.test(ua)) return 'Tablet';
-        else return 'Desktop';
-    }
-    
-    // Logout function
-    function logout() {
-        clearInterval(monitoringInterval);
-        currentUser = null;
-        localStorage.removeItem('currentUser');
+        // Format date
+        function formatDate(timestamp) {
+            if (!timestamp) return 'Never';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString();
+        }
         
-        // Show login page
-        document.getElementById('awareDashboard').style.display = 'none';
-        document.getElementById('authContainer').style.display = 'flex';
+        // Get device info
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            if (/Mobile|Android|iPhone|iPad|iPod/.test(ua)) return 'Mobile';
+            else if (/Tablet|iPad/.test(ua)) return 'Tablet';
+            else return 'Desktop';
+        }
         
-        // Clear form fields
-        document.getElementById('schoolEmail').value = '';
-        document.getElementById('schoolPassword').value = '';
-        document.getElementById('teacherEmail').value = '';
-        document.getElementById('teacherPassword').value = '';
+        // Logout function
+        function logout() {
+            clearInterval(monitoringInterval);
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            
+            // Show login page
+            document.getElementById('awareDashboard').style.display = 'none';
+            document.getElementById('authContainer').style.display = 'flex';
+            
+            // Clear form fields
+            document.getElementById('schoolEmail').value = '';
+            document.getElementById('schoolPassword').value = '';
+            document.getElementById('teacherEmail').value = '';
+            document.getElementById('teacherPassword').value = '';
+            
+            // Show success message
+            showSuccess('Logged out successfully!');
+        }
         
-        // Show success message
-        showSuccess('Logged out successfully!');
-    }
-    
-    // Initialize the application when the page loads
-    document.addEventListener('DOMContentLoaded', initializeApp);
-</script>
+        // Initialize the application when the page loads
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
 </body>
 </html>
