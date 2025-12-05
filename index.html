@@ -165,6 +165,16 @@
             border-radius: var(--radius-md);
         }
         
+        .btn-add {
+            background: linear-gradient(135deg, var(--success) 0%, #2a9d8f 100%);
+            color: white;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 20px;
+        }
+        
         .error-message {
             color: var(--danger);
             text-align: center;
@@ -917,6 +927,79 @@
         .checkbox-group label {
             margin-bottom: 0;
             cursor: pointer;
+        }
+        
+        /* Student List Styles for Add to Class Modal */
+        .student-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e1e5ee;
+            border-radius: var(--radius-md);
+            margin-bottom: 20px;
+        }
+        
+        .student-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e1e5ee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s;
+        }
+        
+        .student-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .student-item:last-child {
+            border-bottom: none;
+        }
+        
+        .student-item-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .student-avatar-small {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--aware-primary) 0%, var(--aware-secondary) 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        /* Search Input */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid #e1e5ee;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--aware-primary);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
         }
         
         /* Responsive Design */
@@ -1683,33 +1766,38 @@
         </div>
     </div>
     
-    <div class="modal" id="addStudentModal">
+    <!-- ADD STUDENT TO CLASS MODAL -->
+    <div class="modal" id="addStudentToClassModal">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="modal-title">Add Student to Class</div>
-                <button class="modal-close" onclick="closeModal('addStudentModal')">×</button>
+                <div class="modal-title">Add Students to Class</div>
+                <button class="modal-close" onclick="closeModal('addStudentToClassModal')">×</button>
             </div>
             
             <div class="form-group">
-                <label for="awareStudentFirstName">First Name</label>
-                <input type="text" id="awareStudentFirstName" placeholder="Enter student first name" required class="form-control">
+                <label id="selectedClassName">Class: Loading...</label>
+                <div style="margin-top: 5px; color: #666; font-size: 0.9rem;">
+                    <span id="currentStudentCount">0</span> students currently in this class
+                </div>
             </div>
             
-            <div class="form-group">
-                <label for="awareStudentLastName">Last Name</label>
-                <input type="text" id="awareStudentLastName" placeholder="Enter student last name" required class="form-control">
+            <div class="search-box">
+                <input type="text" id="studentSearchModal" placeholder="Search students by name..." onkeyup="searchStudentsInModal()">
+                <span class="search-icon">🔍</span>
             </div>
             
-            <div class="form-group">
-                <label for="awareStudentClassSelect">Select Class</label>
-                <select id="awareStudentClassSelect" class="form-control">
-                    <!-- Classes will be populated here -->
-                </select>
+            <div class="student-list" id="availableStudentsList">
+                <!-- Available students will be populated here -->
             </div>
             
-            <button class="btn btn-primary" onclick="addStudentToAwareClass()" style="width: 100%; padding: 14px;">
-                <span>➕</span> Add Student
-            </button>
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span id="selectedCount">0</span> student(s) selected
+                </div>
+                <button class="btn btn-success" onclick="addSelectedStudents()" id="addStudentsBtnModal">
+                    <span>➕</span> Add Selected Students
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1908,6 +1996,8 @@
         let monitoringInterval;
         let selectedStudent = null;
         let selectedDays = [];
+        let selectedStudents = new Set();
+        let currentClassForAdding = null;
         
         // Initialize the application
         function initializeApp() {
@@ -2821,8 +2911,8 @@
                         <button class="btn btn-sm btn-warning" onclick="editClass('${cls.id}')">
                             <span>✏️</span> Edit
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteClass('${cls.id}')">
-                            <span>🗑️</span> Delete
+                        <button class="btn btn-sm btn-success" onclick="showAddStudentToClassModal('${cls.id}')">
+                            <span>➕</span> Add Students
                         </button>
                     </div>
                 `;
@@ -3440,6 +3530,139 @@
             logActivity('class_create', 'Class created', `Class "${className}" was created`);
             
             updateClassesGrid();
+        }
+        
+        // Show add student to class modal
+        function showAddStudentToClassModal(classId) {
+            currentClassForAdding = classId;
+            selectedStudents.clear();
+            
+            const data = getSharedData();
+            const cls = data.classes[classId];
+            
+            if (!cls) {
+                showError('Class not found');
+                return;
+            }
+            
+            // Set class name
+            document.getElementById('selectedClassName').textContent = `Class: ${cls.name}`;
+            
+            // Count current students in this class
+            const currentStudents = Object.values(data.students || {}).filter(s => s.classCode === classId).length;
+            document.getElementById('currentStudentCount').textContent = currentStudents;
+            
+            // Get all students
+            const allStudents = Object.values(data.students || {});
+            
+            // Filter out students already in this class
+            const availableStudents = allStudents.filter(student => student.classCode !== classId);
+            
+            // Display available students
+            const container = document.getElementById('availableStudentsList');
+            container.innerHTML = '';
+            
+            if (availableStudents.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 30px; color: #666;">All students are already in this class</div>';
+                document.getElementById('addStudentsBtnModal').disabled = true;
+                return;
+            }
+            
+            availableStudents.forEach(student => {
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.id = `student-item-${student.id}`;
+                item.innerHTML = `
+                    <div class="student-item-info">
+                        <div class="student-avatar-small">${student.name ? student.name.charAt(0).toUpperCase() : 'S'}</div>
+                        <div>
+                            <div style="font-weight: 500;">${student.name || 'Unknown Student'}</div>
+                            <div style="font-size: 0.8rem; color: #666;">
+                                Current Class: ${getClassName(student.classCode) || 'Unassigned'}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="checkbox" class="student-checkbox" data-id="${student.id}" onchange="toggleStudentSelectionModal('${student.id}', this.checked)">
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+            
+            // Update selected count
+            document.getElementById('selectedCount').textContent = '0';
+            document.getElementById('addStudentsBtnModal').disabled = true;
+            
+            // Clear search
+            document.getElementById('studentSearchModal').value = '';
+            
+            openModal('addStudentToClassModal');
+        }
+        
+        // Toggle student selection in modal
+        function toggleStudentSelectionModal(studentId, checked) {
+            if (checked) {
+                selectedStudents.add(studentId);
+            } else {
+                selectedStudents.delete(studentId);
+            }
+            
+            // Update selected count
+            document.getElementById('selectedCount').textContent = selectedStudents.size;
+            
+            // Enable/disable add button
+            document.getElementById('addStudentsBtnModal').disabled = selectedStudents.size === 0;
+        }
+        
+        // Search students in modal
+        function searchStudentsInModal() {
+            const searchTerm = document.getElementById('studentSearchModal').value.toLowerCase();
+            const items = document.querySelectorAll('#availableStudentsList .student-item');
+            
+            items.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        }
+        
+        // Add selected students to class
+        function addSelectedStudents() {
+            if (!currentClassForAdding || selectedStudents.size === 0) {
+                showError('No students selected');
+                return;
+            }
+            
+            const data = getSharedData();
+            const cls = data.classes[currentClassForAdding];
+            
+            if (!cls) {
+                showError('Class not found');
+                return;
+            }
+            
+            let addedCount = 0;
+            selectedStudents.forEach(studentId => {
+                const student = data.students[studentId];
+                if (student) {
+                    student.classCode = currentClassForAdding;
+                    addedCount++;
+                    
+                    // Log activity
+                    logActivity('student_assigned', 'Student Added to Class', 
+                        `${student.name} was added to ${cls.name}`, studentId);
+                }
+            });
+            
+            saveSharedData(data);
+            showSuccess(`Added ${addedCount} student(s) to ${cls.name}`);
+            
+            // Close modal
+            closeModal('addStudentToClassModal');
+            
+            // Update views
+            updateClassesGrid();
+            updateStudents();
+            updateOverview();
         }
         
         // Show create bypass code modal
